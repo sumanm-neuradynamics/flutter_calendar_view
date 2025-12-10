@@ -111,8 +111,7 @@ class _LiveTimeIndicatorState extends State<LiveTimeIndicator> {
     final currentMinute = _currentTime.minute.appendLeadingZero();
     final currentPeriod = _currentTime.period.name;
     final currentDateTime = _getCurrentDateTime();
-    final timeString =
-        widget.liveTimeIndicatorSettings.timeStringBuilder?.call(
+    final timeString = widget.liveTimeIndicatorSettings.timeStringBuilder?.call(
           currentDateTime,
         ) ??
         '$currentHour:$currentMinute $currentPeriod';
@@ -272,11 +271,9 @@ class _TimeLineState extends State<TimeLine> {
         children: [
           for (int i = widget.startHour + 1; i < widget.endHour; i++)
             _timelinePositioned(
-              topPosition:
-                  widget.hourHeight * (i - widget.startHour) -
+              topPosition: widget.hourHeight * (i - widget.startHour) -
                   widget.timeLineOffset,
-              bottomPosition:
-                  widget.height -
+              bottomPosition: widget.height -
                   (widget.hourHeight * (i - widget.startHour + 1)) +
                   widget.timeLineOffset,
               hour: i,
@@ -284,12 +281,10 @@ class _TimeLineState extends State<TimeLine> {
           if (widget.showHalfHours)
             for (int i = widget.startHour; i < widget.endHour; i++)
               _timelinePositioned(
-                topPosition:
-                    widget.hourHeight * (i - widget.startHour) -
+                topPosition: widget.hourHeight * (i - widget.startHour) -
                     widget.timeLineOffset +
                     widget._halfHourHeight,
-                bottomPosition:
-                    widget.height -
+                bottomPosition: widget.height -
                     (widget.hourHeight * (i - widget.startHour + 1)) +
                     widget.timeLineOffset,
                 hour: i,
@@ -299,12 +294,10 @@ class _TimeLineState extends State<TimeLine> {
             for (int i = widget.startHour; i < widget.endHour; i++) ...[
               /// this is for 15 minutes
               _timelinePositioned(
-                topPosition:
-                    widget.hourHeight * (i - widget.startHour) -
+                topPosition: widget.hourHeight * (i - widget.startHour) -
                     widget.timeLineOffset +
                     widget.hourHeight * 0.25,
-                bottomPosition:
-                    widget.height -
+                bottomPosition: widget.height -
                     (widget.hourHeight * (i - widget.startHour + 1)) +
                     widget.timeLineOffset,
                 hour: i,
@@ -313,12 +306,10 @@ class _TimeLineState extends State<TimeLine> {
 
               /// this is for 45 minutes
               _timelinePositioned(
-                topPosition:
-                    widget.hourHeight * (i - widget.startHour) -
+                topPosition: widget.hourHeight * (i - widget.startHour) -
                     widget.timeLineOffset +
                     widget.hourHeight * 0.75,
-                bottomPosition:
-                    widget.height -
+                bottomPosition: widget.height -
                     (widget.hourHeight * (i - widget.startHour + 1)) +
                     widget.timeLineOffset,
                 hour: i,
@@ -350,8 +341,7 @@ class _TimeLineState extends State<TimeLine> {
     );
 
     return Visibility(
-      visible:
-          !((_currentTime.minute >= 45 && _currentTime.hour == hour - 1) ||
+      visible: !((_currentTime.minute >= 45 && _currentTime.hour == hour - 1) ||
               (_currentTime.minute <= 15 && _currentTime.hour == hour)) ||
           !(widget.liveTimeIndicatorSettings.showTime ||
               widget.liveTimeIndicatorSettings.showTimeBackgroundView),
@@ -445,7 +435,7 @@ class EventGenerator<T extends Object?> extends StatelessWidget {
   List<Widget> _generateEvents(BuildContext context) {
     // In RTL mode, reduce available width by timeline width to avoid overlap
     final effectiveWidth = isRTL && timeLineWidth != null
-        ? width - timeLineWidth!
+        ? (width - timeLineWidth!).clamp(0.0, double.maxFinite)
         : width;
 
     final events = eventArranger.arrange(
@@ -457,10 +447,20 @@ class EventGenerator<T extends Object?> extends StatelessWidget {
       calendarViewDate: date,
     );
     return List.generate(events.length, (index) {
-      // In RTL mode, adjust boundary to account for timeline width
-      final boundaryWidth = isRTL && timeLineWidth != null
-          ? effectiveWidth - events[index].right - events[index].left
-          : width - events[index].right - events[index].left;
+      // Calculate the width available for the event boundary
+      // In RTL mode, use effectiveWidth; otherwise use the full width
+      final availableWidth =
+          isRTL && timeLineWidth != null ? effectiveWidth : width;
+
+      // Calculate boundary width, ensuring it's never negative
+      // The boundary width is the space between left and right constraints
+      final boundaryWidth =
+          (availableWidth - events[index].right - events[index].left)
+              .clamp(0.0, double.maxFinite);
+
+      // Calculate boundary height, ensuring it's never negative
+      final boundaryHeight = (height - events[index].bottom - events[index].top)
+          .clamp(0.0, double.maxFinite);
 
       return Positioned(
         top: events[index].top,
@@ -475,8 +475,8 @@ class EventGenerator<T extends Object?> extends StatelessWidget {
             builder: (context) {
               if (scrollNotifier.shouldScroll &&
                   events[index].events.any(
-                    (element) => element == scrollNotifier.event,
-                  )) {
+                        (element) => element == scrollNotifier.event,
+                      )) {
                 _scrollToEvent(context);
               }
               return eventTileBuilder(
@@ -486,7 +486,7 @@ class EventGenerator<T extends Object?> extends StatelessWidget {
                   events[index].left,
                   events[index].top,
                   boundaryWidth,
-                  height - events[index].bottom - events[index].top,
+                  boundaryHeight,
                 ),
                 events[index].startDuration,
                 events[index].endDuration,
