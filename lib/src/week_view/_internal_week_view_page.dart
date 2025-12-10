@@ -255,6 +255,8 @@ class _InternalWeekViewPageState<T extends Object?>
   Widget build(BuildContext context) {
     final filteredDates = _filteredDate();
     final themeColor = context.weekViewColors;
+    // Detect RTL layout
+    final isRTL = Directionality.of(context) == TextDirection.rtl;
 
     return Container(
       color: widget.backgroundColor ?? themeColor.pageBackgroundColor,
@@ -418,7 +420,7 @@ class _InternalWeekViewPageState<T extends Object?>
                         ),
                       ),
                     Align(
-                      alignment: Alignment.centerRight,
+                      alignment: isRTL ? Alignment.centerLeft : Alignment.centerRight,
                       child: SizedBox(
                         width: widget.weekTitleWidth * filteredDates.length,
                         height: widget.height,
@@ -473,6 +475,8 @@ class _InternalWeekViewPageState<T extends Object?>
                                       ),
                                       heightPerMinute: widget.heightPerMinute,
                                       endHour: widget.endHour,
+                                      timeLineWidth: isRTL ? widget.timeLineWidth : null,
+                                      isRTL: isRTL,
                                     ),
                                   ],
                                 ),
@@ -482,19 +486,22 @@ class _InternalWeekViewPageState<T extends Object?>
                         ),
                       ),
                     ),
-                    TimeLine(
-                      timeLineWidth: widget.timeLineWidth,
-                      hourHeight: widget.hourHeight,
-                      height: widget.height,
-                      timeLineOffset: widget.timeLineOffset,
-                      timeLineBuilder: widget.timeLineBuilder,
-                      startHour: widget.startHour,
-                      showHalfHours: widget.showHalfHours,
-                      showQuarterHours: widget.showQuarterHours,
-                      liveTimeIndicatorSettings:
-                          widget.liveTimeIndicatorSettings,
-                      endHour: widget.endHour,
-                      onTimestampTap: widget.onTimestampTap,
+                    Align(
+                      alignment: isRTL ? Alignment.centerRight : Alignment.centerLeft,
+                      child: TimeLine(
+                        timeLineWidth: widget.timeLineWidth,
+                        hourHeight: widget.hourHeight,
+                        height: widget.height,
+                        timeLineOffset: widget.timeLineOffset,
+                        timeLineBuilder: widget.timeLineBuilder,
+                        startHour: widget.startHour,
+                        showHalfHours: widget.showHalfHours,
+                        showQuarterHours: widget.showQuarterHours,
+                        liveTimeIndicatorSettings:
+                            widget.liveTimeIndicatorSettings,
+                        endHour: widget.endHour,
+                        onTimestampTap: widget.onTimestampTap,
+                      ),
                     ),
                     if (widget.showLiveLine &&
                         widget.liveTimeIndicatorSettings.height > 0)

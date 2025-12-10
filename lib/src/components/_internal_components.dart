@@ -45,17 +45,17 @@ class LiveTimeIndicator extends StatefulWidget {
   final bool onlyShowToday;
 
   /// Widget to display tile line according to current time.
-  const LiveTimeIndicator(
-      {Key? key,
-      required this.width,
-      required this.height,
-      required this.timeLineWidth,
-      required this.liveTimeIndicatorSettings,
-      required this.heightPerMinute,
-      required this.startHour,
-      this.endHour = Constants.hoursADay,
-      this.onlyShowToday = false})
-      : super(key: key);
+  const LiveTimeIndicator({
+    Key? key,
+    required this.width,
+    required this.height,
+    required this.timeLineWidth,
+    required this.liveTimeIndicatorSettings,
+    required this.heightPerMinute,
+    required this.startHour,
+    this.endHour = Constants.hoursADay,
+    this.onlyShowToday = false,
+  }) : super(key: key);
 
   @override
   _LiveTimeIndicatorState createState() => _LiveTimeIndicatorState();
@@ -111,8 +111,10 @@ class _LiveTimeIndicatorState extends State<LiveTimeIndicator> {
     final currentMinute = _currentTime.minute.appendLeadingZero();
     final currentPeriod = _currentTime.period.name;
     final currentDateTime = _getCurrentDateTime();
-    final timeString = widget.liveTimeIndicatorSettings.timeStringBuilder
-            ?.call(currentDateTime) ??
+    final timeString =
+        widget.liveTimeIndicatorSettings.timeStringBuilder?.call(
+          currentDateTime,
+        ) ??
         '$currentHour:$currentMinute $currentPeriod';
 
     /// remove startHour minute from [_currentTime.getTotalMinutes]
@@ -270,9 +272,11 @@ class _TimeLineState extends State<TimeLine> {
         children: [
           for (int i = widget.startHour + 1; i < widget.endHour; i++)
             _timelinePositioned(
-              topPosition: widget.hourHeight * (i - widget.startHour) -
+              topPosition:
+                  widget.hourHeight * (i - widget.startHour) -
                   widget.timeLineOffset,
-              bottomPosition: widget.height -
+              bottomPosition:
+                  widget.height -
                   (widget.hourHeight * (i - widget.startHour + 1)) +
                   widget.timeLineOffset,
               hour: i,
@@ -280,10 +284,12 @@ class _TimeLineState extends State<TimeLine> {
           if (widget.showHalfHours)
             for (int i = widget.startHour; i < widget.endHour; i++)
               _timelinePositioned(
-                topPosition: widget.hourHeight * (i - widget.startHour) -
+                topPosition:
+                    widget.hourHeight * (i - widget.startHour) -
                     widget.timeLineOffset +
                     widget._halfHourHeight,
-                bottomPosition: widget.height -
+                bottomPosition:
+                    widget.height -
                     (widget.hourHeight * (i - widget.startHour + 1)) +
                     widget.timeLineOffset,
                 hour: i,
@@ -293,10 +299,12 @@ class _TimeLineState extends State<TimeLine> {
             for (int i = widget.startHour; i < widget.endHour; i++) ...[
               /// this is for 15 minutes
               _timelinePositioned(
-                topPosition: widget.hourHeight * (i - widget.startHour) -
+                topPosition:
+                    widget.hourHeight * (i - widget.startHour) -
                     widget.timeLineOffset +
                     widget.hourHeight * 0.25,
-                bottomPosition: widget.height -
+                bottomPosition:
+                    widget.height -
                     (widget.hourHeight * (i - widget.startHour + 1)) +
                     widget.timeLineOffset,
                 hour: i,
@@ -305,10 +313,12 @@ class _TimeLineState extends State<TimeLine> {
 
               /// this is for 45 minutes
               _timelinePositioned(
-                topPosition: widget.hourHeight * (i - widget.startHour) -
+                topPosition:
+                    widget.hourHeight * (i - widget.startHour) -
                     widget.timeLineOffset +
                     widget.hourHeight * 0.75,
-                bottomPosition: widget.height -
+                bottomPosition:
+                    widget.height -
                     (widget.hourHeight * (i - widget.startHour + 1)) +
                     widget.timeLineOffset,
                 hour: i,
@@ -340,7 +350,8 @@ class _TimeLineState extends State<TimeLine> {
     );
 
     return Visibility(
-      visible: !((_currentTime.minute >= 45 && _currentTime.hour == hour - 1) ||
+      visible:
+          !((_currentTime.minute >= 45 && _currentTime.hour == hour - 1) ||
               (_currentTime.minute <= 15 && _currentTime.hour == hour)) ||
           !(widget.liveTimeIndicatorSettings.showTime ||
               widget.liveTimeIndicatorSettings.showTimeBackgroundView),
@@ -402,6 +413,12 @@ class EventGenerator<T extends Object?> extends StatelessWidget {
   /// This field will be used to set end hour for day and week view
   final int endHour;
 
+  /// Width of timeline. Used in RTL mode to adjust event boundaries.
+  final double? timeLineWidth;
+
+  /// Whether the layout is in RTL mode.
+  final bool isRTL;
+
   /// A widget that display event tiles in day/week view.
   const EventGenerator({
     Key? key,
@@ -418,21 +435,33 @@ class EventGenerator<T extends Object?> extends StatelessWidget {
     required this.scrollNotifier,
     required this.onTileDoubleTap,
     this.endHour = Constants.hoursADay,
+    this.timeLineWidth,
+    this.isRTL = false,
   }) : super(key: key);
 
   /// Arrange events and returns list of [Widget] that displays event
   /// tile on display area. This method uses [eventArranger] to get position
   /// of events and [eventTileBuilder] to display events.
   List<Widget> _generateEvents(BuildContext context) {
+    // In RTL mode, reduce available width by timeline width to avoid overlap
+    final effectiveWidth = isRTL && timeLineWidth != null
+        ? width - timeLineWidth!
+        : width;
+
     final events = eventArranger.arrange(
       events: this.events,
       height: height,
-      width: width,
+      width: effectiveWidth,
       heightPerMinute: heightPerMinute,
       startHour: startHour,
       calendarViewDate: date,
     );
     return List.generate(events.length, (index) {
+      // In RTL mode, adjust boundary to account for timeline width
+      final boundaryWidth = isRTL && timeLineWidth != null
+          ? effectiveWidth - events[index].right - events[index].left
+          : width - events[index].right - events[index].left;
+
       return Positioned(
         top: events[index].top,
         bottom: events[index].bottom,
@@ -442,25 +471,28 @@ class EventGenerator<T extends Object?> extends StatelessWidget {
           onLongPress: () => onTileLongTap?.call(events[index].events, date),
           onTap: () => onTileTap?.call(events[index].events, date),
           onDoubleTap: () => onTileDoubleTap?.call(events[index].events, date),
-          child: Builder(builder: (context) {
-            if (scrollNotifier.shouldScroll &&
-                events[index]
-                    .events
-                    .any((element) => element == scrollNotifier.event)) {
-              _scrollToEvent(context);
-            }
-            return eventTileBuilder(
-              date,
-              events[index].events,
-              Rect.fromLTWH(
+          child: Builder(
+            builder: (context) {
+              if (scrollNotifier.shouldScroll &&
+                  events[index].events.any(
+                    (element) => element == scrollNotifier.event,
+                  )) {
+                _scrollToEvent(context);
+              }
+              return eventTileBuilder(
+                date,
+                events[index].events,
+                Rect.fromLTWH(
                   events[index].left,
                   events[index].top,
-                  width - events[index].right - events[index].left,
-                  height - events[index].bottom - events[index].top),
-              events[index].startDuration,
-              events[index].endDuration,
-            );
-          }),
+                  boundaryWidth,
+                  height - events[index].bottom - events[index].top,
+                ),
+                events[index].startDuration,
+                events[index].endDuration,
+              );
+            },
+          ),
         ),
       );
     });
@@ -492,9 +524,7 @@ class EventGenerator<T extends Object?> extends StatelessWidget {
     return Container(
       height: height,
       width: width,
-      child: Stack(
-        children: _generateEvents(context),
-      ),
+      child: Stack(children: _generateEvents(context)),
     );
   }
 }
