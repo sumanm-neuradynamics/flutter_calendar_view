@@ -775,6 +775,8 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
 
   /// Default builder for week line.
   Widget _defaultWeekDayBuilder(DateTime date) {
+    final baseFontSize = 14.0;
+    final reducedFontSize = baseFontSize * 0.7; // 30% reduction
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -785,6 +787,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
                 Constants.weekTitles[date.weekday - 1],
             style: TextStyle(
               color: context.weekViewColors.weekDayTextColor,
+              fontSize: reducedFontSize,
             ),
           ),
           Text(
@@ -792,6 +795,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
                 date.day.toString(),
             style: TextStyle(
               color: context.weekViewColors.weekDayTextColor,
+              fontSize: reducedFontSize,
             ),
           ),
         ],
