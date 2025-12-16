@@ -274,10 +274,13 @@ class _InternalWeekViewPageState<T extends Object?>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: widget.weekTitleHeight,
-                    width: widget.timeLineWidth +
-                        widget.hourIndicatorSettings.offset,
+                  ColoredBox(
+                    color: Colors.white,
+                    child: SizedBox(
+                      height: widget.weekTitleHeight,
+                      width: widget.timeLineWidth +
+                          widget.hourIndicatorSettings.offset,
+                    ),
                   ),
                   ...List.generate(
                     filteredDates.length,
