@@ -825,7 +825,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
         timeStringBuilder: widget.timeLineStringBuilder,
         markingStyle: TextStyle(
           color: context.weekViewColors.timelineTextColor,
-          fontSize: 15.0,
+          fontSize: 12.0,
         ),
       );
 

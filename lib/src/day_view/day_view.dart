@@ -667,7 +667,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
         timeStringBuilder: widget.timeStringBuilder,
         markingStyle: TextStyle(
           color: context.dayViewColors.timelineTextColor,
-          fontSize: 15.0,
+          fontSize: 12.0,
         ),
       );
 
