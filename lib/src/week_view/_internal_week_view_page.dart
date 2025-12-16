@@ -268,32 +268,39 @@ class _InternalWeekViewPageState<T extends Object?>
         children: [
           SizedBox(
             width: widget.width,
-            child: ColoredBox(
-              color: widget.weekTitleBackgroundColor ??
-                  themeColor.weekDayTileColor,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ColoredBox(
-                    color: Colors.white,
-                    child: SizedBox(
-                      height: widget.weekTitleHeight,
-                      width: widget.timeLineWidth +
-                          widget.hourIndicatorSettings.offset,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ColoredBox(
+                  color: Colors.white,
+                  child: SizedBox(
+                    height: widget.weekTitleHeight,
+                    width: widget.timeLineWidth +
+                        widget.hourIndicatorSettings.offset,
+                  ),
+                ),
+                Expanded(
+                  child: ColoredBox(
+                    color: widget.weekTitleBackgroundColor ??
+                        themeColor.weekDayTileColor,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ...List.generate(
+                          filteredDates.length,
+                          (index) => SizedBox(
+                            height: widget.weekTitleHeight,
+                            width: widget.weekTitleWidth,
+                            child: widget.weekDayBuilder(
+                              filteredDates[index],
+                            ),
+                          ),
+                        )
+                      ],
                     ),
                   ),
-                  ...List.generate(
-                    filteredDates.length,
-                    (index) => SizedBox(
-                      height: widget.weekTitleHeight,
-                      width: widget.weekTitleWidth,
-                      child: widget.weekDayBuilder(
-                        filteredDates[index],
-                      ),
-                    ),
-                  )
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           Divider(
