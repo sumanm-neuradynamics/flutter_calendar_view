@@ -278,7 +278,6 @@ class _InternalWeekViewPageState<T extends Object?>
                     height: widget.weekTitleHeight,
                     width: widget.timeLineWidth +
                         widget.hourIndicatorSettings.offset,
-                    child: widget.weekNumberBuilder.call(filteredDates[0]),
                   ),
                   ...List.generate(
                     filteredDates.length,
