@@ -131,16 +131,11 @@ class DefaultTimeLineMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hour = ((date.hour - 1) % 12) + 1;
-    final isWholeHour = date.minute == 0;
     final timeString = (timeStringBuilder != null)
         ? timeStringBuilder!(date)
         : date.minute != 0
             ? "$hour:${date.minute}"
             : "$hour${date.hour ~/ 12 == 0 ? "AM" : "PM"}";
-    final baseFontSize = markingStyle?.fontSize ?? 15.0;
-    final textStyle = isWholeHour
-        ? (markingStyle ?? TextStyle()).copyWith(fontSize: baseFontSize / 2)
-        : (markingStyle ?? TextStyle()).copyWith(fontSize: baseFontSize * 1.5);
     return Transform.translate(
       offset: Offset(0, -7.5),
       child: Padding(
@@ -148,7 +143,7 @@ class DefaultTimeLineMark extends StatelessWidget {
         child: Text(
           timeString,
           textAlign: TextAlign.right,
-          style: textStyle,
+          style: markingStyle,
         ),
       ),
     );
