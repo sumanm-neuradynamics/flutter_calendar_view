@@ -253,18 +253,6 @@ class WeekView<T extends Object?> extends StatefulWidget {
   /// Flag to keep scrollOffset of pages on page change
   final bool keepScrollOffset;
 
-  /// Opacity for full-width events that span all day columns.
-  /// Default value is 0.6.
-  final double fullWidthEventOpacity;
-
-  /// Border radius for full-width events.
-  /// Default value is 0 (no rounded corners).
-  final double fullWidthEventBorderRadius;
-
-  /// Border styling for full-width events.
-  /// If null, no border will be applied.
-  final Border? fullWidthEventBorder;
-
   /// Main widget for week view.
   const WeekView({
     Key? key,
@@ -326,9 +314,6 @@ class WeekView<T extends Object?> extends StatefulWidget {
     this.fullDayHeaderTextConfig,
     this.keepScrollOffset = false,
     this.onTimestampTap,
-    this.fullWidthEventOpacity = 0.6,
-    this.fullWidthEventBorderRadius = 0.0,
-    this.fullWidthEventBorder,
   })  : assert(!(onHeaderTitleTap != null && weekPageHeaderBuilder != null),
             "can't use [onHeaderTitleTap] & [weekPageHeaderBuilder] simultaneously"),
         assert((timeLineOffset) >= 0,
@@ -351,14 +336,6 @@ class WeekView<T extends Object?> extends StatefulWidget {
         assert(
           endHour <= Constants.hoursADay || endHour < startHour,
           "End hour must be less than 24 or startHour must be less than endHour",
-        ),
-        assert(
-          fullWidthEventOpacity >= 0.0 && fullWidthEventOpacity <= 1.0,
-          "fullWidthEventOpacity must be between 0.0 and 1.0",
-        ),
-        assert(
-          fullWidthEventBorderRadius >= 0.0,
-          "fullWidthEventBorderRadius must be greater than or equal to 0.0",
         ),
         super(key: key);
 
@@ -608,10 +585,6 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
                           scrollPhysics: widget.scrollPhysics,
                           scrollListener: _scrollPageListener,
                           keepScrollOffset: widget.keepScrollOffset,
-                          fullWidthEventOpacity: widget.fullWidthEventOpacity,
-                          fullWidthEventBorderRadius:
-                              widget.fullWidthEventBorderRadius,
-                          fullWidthEventBorder: widget.fullWidthEventBorder,
                         ),
                       );
                     },
