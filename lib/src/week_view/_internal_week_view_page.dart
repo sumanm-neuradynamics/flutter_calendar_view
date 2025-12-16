@@ -167,6 +167,15 @@ class InternalWeekViewPage<T extends Object?> extends StatefulWidget {
   /// Use this to change background color of week view page
   final Color? backgroundColor;
 
+  /// Opacity for full-width events that span all day columns.
+  final double fullWidthEventOpacity;
+
+  /// Border radius for full-width events.
+  final double fullWidthEventBorderRadius;
+
+  /// Border styling for full-width events.
+  final Border? fullWidthEventBorder;
+
   /// A single page for week view.
   const InternalWeekViewPage({
     Key? key,
@@ -219,6 +228,9 @@ class InternalWeekViewPage<T extends Object?> extends StatefulWidget {
     this.lastScrollOffset = 0.0,
     this.keepScrollOffset = false,
     this.backgroundColor,
+    this.fullWidthEventOpacity = 0.6,
+    this.fullWidthEventBorderRadius = 0.0,
+    this.fullWidthEventBorder,
   }) : super(key: key);
 
   @override
@@ -476,10 +488,13 @@ class _InternalWeekViewPageState<T extends Object?>
                                       scrollNotifier:
                                           widget.scrollConfiguration,
                                       startHour: widget.startHour,
-                                      events: widget.controller.getEventsOnDay(
-                                        filteredDates[index],
-                                        includeFullDayEvents: false,
-                                      ),
+                                      events: widget.controller
+                                          .getEventsOnDay(
+                                            filteredDates[index],
+                                            includeFullDayEvents: false,
+                                          )
+                                          .where((e) => !e.isFullWidth)
+                                          .toList(),
                                       heightPerMinute: widget.heightPerMinute,
                                       endHour: widget.endHour,
                                     ),
@@ -491,6 +506,7 @@ class _InternalWeekViewPageState<T extends Object?>
                         ),
                       ),
                     ),
+                    _buildFullWidthEvents(filteredDates, themeColor),
                     TimeLine(
                       timeLineWidth: widget.timeLineWidth,
                       hourHeight: widget.hourHeight,
@@ -539,5 +555,112 @@ class _InternalWeekViewPageState<T extends Object?>
     }
 
     return output;
+  }
+
+  /// Builds full-width events that span all day columns.
+  Widget _buildFullWidthEvents(
+      List<DateTime> filteredDates, dynamic themeColor) {
+    // Collect all full-width events for the week, avoiding duplicates
+    final fullWidthEventsSet = <CalendarEventData<T>>{};
+    for (final date in filteredDates) {
+      final events = widget.controller.getEventsOnDay(
+        date,
+        includeFullDayEvents: false,
+      );
+      fullWidthEventsSet.addAll(events.where((e) => e.isFullWidth));
+    }
+
+    final fullWidthEvents = fullWidthEventsSet.toList();
+    if (fullWidthEvents.isEmpty) {
+      return SizedBox.shrink();
+    }
+
+    // Calculate the width for full-width events (all day columns)
+    final fullWidth = widget.weekTitleWidth * filteredDates.length;
+    final startOffset =
+        widget.timeLineWidth + widget.hourIndicatorSettings.offset;
+
+    return Positioned(
+      left: startOffset,
+      top: 0,
+      right: 0,
+      bottom: 0,
+      child: SizedBox(
+        width: fullWidth,
+        height: widget.height,
+        child: Stack(
+          children: fullWidthEvents.map((event) {
+            return _buildFullWidthEventBar(event, fullWidth);
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  /// Builds a single full-width event bar.
+  Widget _buildFullWidthEventBar(
+    CalendarEventData<T> event,
+    double fullWidth,
+  ) {
+    if (event.startTime == null || event.endTime == null) {
+      return SizedBox.shrink();
+    }
+
+    final startHourInMinutes = widget.startHour * 60;
+    final startMinutes = event.startTime!.getTotalMinutes - startHourInMinutes;
+    final endMinutes = event.endTime!.getTotalMinutes - startHourInMinutes;
+
+    // Calculate top position
+    final top = startMinutes * widget.heightPerMinute;
+
+    // Calculate height
+    final height = (endMinutes - startMinutes) * widget.heightPerMinute;
+
+    // Ensure the event is within visible range
+    if (endMinutes <= 0 ||
+        startMinutes >= (widget.endHour - widget.startHour) * 60) {
+      return SizedBox.shrink();
+    }
+
+    // Clip start/end if event extends beyond visible range
+    final clippedTop = startMinutes < 0 ? 0.0 : top;
+    final clippedHeight = endMinutes > (widget.endHour - widget.startHour) * 60
+        ? ((widget.endHour - widget.startHour) * 60 - startMinutes) *
+            widget.heightPerMinute
+        : height;
+
+    return Positioned(
+      top: clippedTop,
+      left: 0,
+      right: 0,
+      height: clippedHeight,
+      child: GestureDetector(
+        onTap: () => widget.onTileTap?.call([event], event.date),
+        onLongPress: () => widget.onTileLongTap?.call([event], event.date),
+        onDoubleTap: () => widget.onTileDoubleTap?.call([event], event.date),
+        child: Container(
+          decoration: BoxDecoration(
+            color: event.color.withOpacity(widget.fullWidthEventOpacity),
+            borderRadius:
+                BorderRadius.circular(widget.fullWidthEventBorderRadius),
+            border: widget.fullWidthEventBorder,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 2,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          child: widget.eventTileBuilder(
+            event.date,
+            [event],
+            Rect.fromLTWH(0, 0, fullWidth, clippedHeight),
+            event.startTime!,
+            event.endTime!,
+          ),
+        ),
+      ),
+    );
   }
 }

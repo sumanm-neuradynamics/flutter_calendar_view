@@ -47,6 +47,10 @@ class CalendarEventData<T extends Object?> {
   /// Define reoccurrence settings
   final RecurrenceSettings? recurrenceSettings;
 
+  /// If true, renders the event as a full-width horizontal bar spanning all day columns
+  /// in week view. When false or not set, renders as a regular event block in its day column.
+  final bool isFullWidth;
+
   /// {@macro calendar_event_data_doc}
   CalendarEventData({
     required this.title,
@@ -60,6 +64,7 @@ class CalendarEventData<T extends Object?> {
     this.descriptionStyle,
     this.recurrenceSettings,
     DateTime? endDate,
+    this.isFullWidth = false,
   })  : _endDate = endDate?.withoutTime,
         date = date.withoutTime;
 
@@ -129,6 +134,7 @@ class CalendarEventData<T extends Object?> {
         "description": description,
         "endDate": endDate,
         "recurrenceSettings": recurrenceSettings,
+        "isFullWidth": isFullWidth,
       };
 
   /// Returns new object of [CalendarEventData] with the updated values defined
@@ -146,6 +152,7 @@ class CalendarEventData<T extends Object?> {
     DateTime? endDate,
     DateTime? date,
     RecurrenceSettings? recurrenceSettings,
+    bool? isFullWidth,
   }) {
     return CalendarEventData(
       title: title ?? this.title,
@@ -159,6 +166,7 @@ class CalendarEventData<T extends Object?> {
       event: event ?? this.event,
       titleStyle: titleStyle ?? this.titleStyle,
       recurrenceSettings: recurrenceSettings ?? this.recurrenceSettings,
+      isFullWidth: isFullWidth ?? this.isFullWidth,
     );
   }
 
@@ -184,7 +192,8 @@ class CalendarEventData<T extends Object?> {
         color == other.color &&
         titleStyle == other.titleStyle &&
         descriptionStyle == other.descriptionStyle &&
-        description == other.description;
+        description == other.description &&
+        isFullWidth == other.isFullWidth;
   }
 
   @override
@@ -194,7 +203,8 @@ class CalendarEventData<T extends Object?> {
       titleStyle.hashCode ^
       color.hashCode ^
       title.hashCode ^
-      date.hashCode;
+      date.hashCode ^
+      isFullWidth.hashCode;
 }
 
 /// {@template calendar_event_data_doc}
