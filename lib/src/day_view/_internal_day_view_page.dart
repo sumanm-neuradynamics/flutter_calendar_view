@@ -10,6 +10,7 @@ import '../components/event_scroll_notifier.dart';
 import '../enumerations.dart';
 import '../event_arrangers/event_arrangers.dart';
 import '../event_controller.dart';
+import '../extensions.dart';
 import '../modals.dart';
 import '../painters.dart';
 import '../typedefs.dart';
@@ -214,6 +215,7 @@ class _InternalDayViewPageState<T extends Object?>
 
   @override
   Widget build(BuildContext context) {
+    final themeColor = context.dayViewColors;
     final fullDayEventList = widget.controller.getFullDayEvent(widget.date);
     return Container(
       height: widget.height,
@@ -325,6 +327,66 @@ class _InternalDayViewPageState<T extends Object?>
                                 startHour: widget.startHour,
                                 endHour: widget.endHour,
                               ),
+                              // Hour lines painted on top of pause background (offset 0 since we're in event area)
+                              CustomPaint(
+                                size: Size(eventWidth, widget.height),
+                                painter: HourLinePainter(
+                                  lineColor: themeColor.hourLineColor,
+                                  lineHeight:
+                                      widget.hourIndicatorSettings.height,
+                                  offset: 0,
+                                  minuteHeight: widget.heightPerMinute,
+                                  showVerticalLine: false,
+                                  verticalLineOffset: 0,
+                                  lineStyle:
+                                      widget.hourIndicatorSettings.lineStyle,
+                                  dashWidth:
+                                      widget.hourIndicatorSettings.dashWidth,
+                                  dashSpaceWidth: widget
+                                      .hourIndicatorSettings.dashSpaceWidth,
+                                  emulateVerticalOffsetBy: 0,
+                                  startHour: widget.startHour,
+                                  endHour: widget.endHour,
+                                ),
+                              ),
+                              if (widget.showHalfHours)
+                                CustomPaint(
+                                  size: Size(eventWidth, widget.height),
+                                  painter: HalfHourLinePainter(
+                                    lineColor: themeColor.halfHourLineColor,
+                                    lineHeight:
+                                        widget.halfHourIndicatorSettings.height,
+                                    offset: 0,
+                                    minuteHeight: widget.heightPerMinute,
+                                    lineStyle: widget
+                                        .halfHourIndicatorSettings.lineStyle,
+                                    dashWidth: widget
+                                        .halfHourIndicatorSettings.dashWidth,
+                                    dashSpaceWidth: widget
+                                        .halfHourIndicatorSettings
+                                        .dashSpaceWidth,
+                                    startHour: widget.startHour,
+                                    endHour: widget.endHour,
+                                  ),
+                                ),
+                              if (widget.showQuarterHours)
+                                CustomPaint(
+                                  size: Size(eventWidth, widget.height),
+                                  painter: QuarterHourLinePainter(
+                                    lineColor: themeColor.quarterHourLineColor,
+                                    lineHeight: widget
+                                        .quarterHourIndicatorSettings.height,
+                                    offset: 0,
+                                    minuteHeight: widget.heightPerMinute,
+                                    lineStyle: widget
+                                        .quarterHourIndicatorSettings.lineStyle,
+                                    dashWidth: widget
+                                        .quarterHourIndicatorSettings.dashWidth,
+                                    dashSpaceWidth: widget
+                                        .quarterHourIndicatorSettings
+                                        .dashSpaceWidth,
+                                  ),
+                                ),
                               // Normal events (rendered on top)
                               EventGenerator<T>(
                                 height: widget.height,
