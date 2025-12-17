@@ -7,6 +7,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../calendar_event_data.dart';
+import '../extensions.dart';
 
 /// Widget that renders pause events as background overlays.
 ///
@@ -97,34 +98,63 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
       ..color = pauseBackgroundColor
       ..style = PaintingStyle.fill;
 
+    // Normalize the current date to midnight for comparison
+    final currentDate = date.withoutTime;
+
     for (final event in pauseEvents) {
       if (event.startTime == null || event.endTime == null) {
         continue;
       }
 
-      // For multi-day events, calculate the time range for the current date
+      // Normalize event dates to midnight for comparison
+      final eventStartDate = event.date.withoutTime;
+      final eventEndDate = event.endDate.withoutTime;
+
+      // Check if this event occurs on the current date
+      // Event occurs on currentDate if:
+      // - currentDate is the event start date, OR
+      // - currentDate is the event end date, OR
+      // - currentDate is between start and end dates (exclusive)
+      final isStartDate = currentDate.year == eventStartDate.year &&
+          currentDate.month == eventStartDate.month &&
+          currentDate.day == eventStartDate.day;
+      final isEndDate = currentDate.year == eventEndDate.year &&
+          currentDate.month == eventEndDate.month &&
+          currentDate.day == eventEndDate.day;
+      final isBetweenDates = currentDate.isAfter(eventStartDate) &&
+          currentDate.isBefore(eventEndDate);
+      
+      final eventOccursOnThisDate = isStartDate || isEndDate || isBetweenDates;
+
+      if (!eventOccursOnThisDate) {
+        continue; // Event doesn't occur on this date, skip
+      }
+
+      // Calculate the time range for this specific date
       int startMinutes;
       int endMinutes;
 
       if (event.isRangingEvent) {
-        // Event spans multiple days
-        if (date.isAtSameMomentAs(event.date)) {
-          // First day: start from event.startTime, end at midnight (24:00)
+        // Multi-day event: calculate time range based on which day we're painting
+        if (isStartDate) {
+          // First day: start from event.startTime, end at end of day (24:00)
           startMinutes = event.startTime!.hour * 60 + event.startTime!.minute;
           endMinutes = 24 * 60; // End of day
-        } else if (date.isAtSameMomentAs(event.endDate)) {
-          // Last day: start from midnight (00:00), end at event.endTime
+        } else if (isEndDate) {
+          // Last day: start from beginning of day (00:00), end at event.endTime
           startMinutes = 0;
           endMinutes = event.endTime!.hour * 60 + event.endTime!.minute;
-        } else if (date.isAfter(event.date) && date.isBefore(event.endDate)) {
-          // Middle day(s): full day coverage
+        } else {
+          // Middle day(s): full day coverage (00:00 to 24:00)
           startMinutes = 0;
           endMinutes = 24 * 60;
-        } else {
-          continue; // Not on this date
         }
       } else {
-        // Single day event
+        // Single day event: use event's startTime and endTime
+        // Only paint if this is the event's date
+        if (!isStartDate) {
+          continue; // Single day event doesn't occur on this date
+        }
         startMinutes = event.startTime!.hour * 60 + event.startTime!.minute;
         endMinutes = event.endTime!.hour * 60 + event.endTime!.minute;
       }
@@ -139,7 +169,7 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
         continue;
       }
 
-      // Calculate top and bottom positions
+      // Calculate top and bottom positions, clamped to visible area
       final top = math.max(0.0, startMinutesFromStartHour * heightPerMinute);
       final bottom = math.min(
         size.height,
