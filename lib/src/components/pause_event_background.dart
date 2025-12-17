@@ -98,66 +98,52 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
       ..color = pauseBackgroundColor
       ..style = PaintingStyle.fill;
 
-    // Normalize the current date to midnight for comparison
-    final currentDate = date.withoutTime;
+    // Normalize the current date (view column date) to midnight for comparison
+    final viewDate = date.withoutTime;
 
     for (final event in pauseEvents) {
       if (event.startTime == null || event.endTime == null) {
+        debugPrint(
+            '[PausePainter] Skipping event ${event.title}: missing startTime or endTime');
         continue;
       }
 
-      // Normalize event dates to midnight for comparison
-      final eventStartDate = event.date.withoutTime;
-      final eventEndDate = event.endDate.withoutTime;
+      // Normalize event date to midnight for comparison
+      final eventDate = event.date.withoutTime;
 
-      // Check if this event occurs on the current date
-      // Event occurs on currentDate if:
-      // - currentDate is the event start date, OR
-      // - currentDate is the event end date, OR
-      // - currentDate is between start and end dates (exclusive)
-      final isStartDate = currentDate.year == eventStartDate.year &&
-          currentDate.month == eventStartDate.month &&
-          currentDate.day == eventStartDate.day;
-      final isEndDate = currentDate.year == eventEndDate.year &&
-          currentDate.month == eventEndDate.month &&
-          currentDate.day == eventEndDate.day;
-      final isBetweenDates = currentDate.isAfter(eventStartDate) &&
-          currentDate.isBefore(eventEndDate);
-      
-      final eventOccursOnThisDate = isStartDate || isEndDate || isBetweenDates;
+      // DEBUG: Log view date and event info
+      debugPrint(
+          '[PausePainter] View date: ${viewDate.year}-${viewDate.month.toString().padLeft(2, '0')}-${viewDate.day.toString().padLeft(2, '0')}');
+      debugPrint(
+          '[PausePainter] Event date: ${eventDate.year}-${eventDate.month.toString().padLeft(2, '0')}-${eventDate.day.toString().padLeft(2, '0')}, '
+          'startTime: ${event.startTime!.hour}:${event.startTime!.minute.toString().padLeft(2, '0')}, '
+          'endTime: ${event.endTime!.hour}:${event.endTime!.minute.toString().padLeft(2, '0')}');
 
-      if (!eventOccursOnThisDate) {
-        continue; // Event doesn't occur on this date, skip
+      // CRITICAL: Only paint if the event's date matches the view column date exactly
+      // The app creates separate CalendarEventData per day, so each event should match its day
+      final datesMatch = viewDate.year == eventDate.year &&
+          viewDate.month == eventDate.month &&
+          viewDate.day == eventDate.day;
+
+      if (!datesMatch) {
+        debugPrint(
+            '[PausePainter] Skipping: event date does not match view date');
+        continue; // Event doesn't belong to this day column, skip
       }
 
-      // Calculate the time range for this specific date
-      int startMinutes;
-      int endMinutes;
+      // Use the event's startTime and endTime directly for this day
+      // The app already creates per-day slices with correct times
+      int startMinutes = event.startTime!.hour * 60 + event.startTime!.minute;
+      int endMinutes = event.endTime!.hour * 60 + event.endTime!.minute;
 
-      if (event.isRangingEvent) {
-        // Multi-day event: calculate time range based on which day we're painting
-        if (isStartDate) {
-          // First day: start from event.startTime, end at end of day (24:00)
-          startMinutes = event.startTime!.hour * 60 + event.startTime!.minute;
-          endMinutes = 24 * 60; // End of day
-        } else if (isEndDate) {
-          // Last day: start from beginning of day (00:00), end at event.endTime
-          startMinutes = 0;
-          endMinutes = event.endTime!.hour * 60 + event.endTime!.minute;
-        } else {
-          // Middle day(s): full day coverage (00:00 to 24:00)
-          startMinutes = 0;
-          endMinutes = 24 * 60;
-        }
-      } else {
-        // Single day event: use event's startTime and endTime
-        // Only paint if this is the event's date
-        if (!isStartDate) {
-          continue; // Single day event doesn't occur on this date
-        }
-        startMinutes = event.startTime!.hour * 60 + event.startTime!.minute;
-        endMinutes = event.endTime!.hour * 60 + event.endTime!.minute;
+      // Handle endTime that might be 23:59:59 - convert to 24:00 (end of day)
+      if (endMinutes == 23 * 60 + 59) {
+        endMinutes = 24 * 60;
       }
+
+      debugPrint(
+          '[PausePainter] Computed paint range: ${startMinutes ~/ 60}:${(startMinutes % 60).toString().padLeft(2, '0')} → '
+          '${endMinutes ~/ 60}:${(endMinutes % 60).toString().padLeft(2, '0')}');
 
       // Calculate top position (offset from startHour)
       final startMinutesFromStartHour = startMinutes - (startHour * 60);
@@ -166,6 +152,8 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
       // Only paint if the event overlaps with the visible time range
       if (endMinutesFromStartHour <= 0 ||
           startMinutesFromStartHour >= (endHour - startHour) * 60) {
+        debugPrint(
+            '[PausePainter] Skipping: outside visible time range (${startHour}:00-${endHour}:00)');
         continue;
       }
 
@@ -182,6 +170,10 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
         // Draw the background rectangle
         final rect = Rect.fromLTWH(0, top, size.width, rectHeight);
         canvas.drawRect(rect, paint);
+        debugPrint(
+            '[PausePainter] ✓ PAINTED: rect from ${top.toStringAsFixed(1)} to ${bottom.toStringAsFixed(1)} (height: ${rectHeight.toStringAsFixed(1)})');
+      } else {
+        debugPrint('[PausePainter] Skipping: rectHeight <= 0');
       }
     }
   }
