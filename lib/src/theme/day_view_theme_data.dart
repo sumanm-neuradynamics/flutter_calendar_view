@@ -36,9 +36,9 @@ class DayViewThemeData extends ThemeExtension<DayViewThemeData> {
 
   /// Get pre-defined colors for light theme
   DayViewThemeData.light()
-      : hourLineColor = Colors.black,
-        halfHourLineColor = Colors.black,
-        quarterHourLineColor = Colors.black,
+      : hourLineColor = const Color(0xFF808080),
+        halfHourLineColor = const Color(0xFF808080),
+        quarterHourLineColor = const Color(0xFF808080),
         pageBackgroundColor = LightAppColors.surfaceContainerLowest,
         liveIndicatorColor = LightAppColors.primary,
         headerIconColor = LightAppColors.onPrimary,
@@ -48,9 +48,9 @@ class DayViewThemeData extends ThemeExtension<DayViewThemeData> {
 
   /// Get pre-defined colors for dark theme
   DayViewThemeData.dark()
-      : hourLineColor = Colors.black,
-        halfHourLineColor = Colors.black,
-        quarterHourLineColor = Colors.black,
+      : hourLineColor = const Color(0xFF808080),
+        halfHourLineColor = const Color(0xFF808080),
+        quarterHourLineColor = const Color(0xFF808080),
         pageBackgroundColor = DarkAppColors.surfaceContainerLowest,
         liveIndicatorColor = DarkAppColors.primary,
         headerIconColor = DarkAppColors.onPrimary,

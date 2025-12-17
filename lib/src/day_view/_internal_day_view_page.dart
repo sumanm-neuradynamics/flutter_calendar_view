@@ -10,6 +10,7 @@ import '../components/event_scroll_notifier.dart';
 import '../enumerations.dart';
 import '../event_arrangers/event_arrangers.dart';
 import '../event_controller.dart';
+import '../extensions.dart';
 import '../modals.dart';
 import '../painters.dart';
 import '../typedefs.dart';
@@ -346,20 +347,30 @@ class _InternalDayViewPageState<T extends Object?>
                         },
                       ),
                     ),
-                    TimeLine(
-                      height: widget.height,
-                      hourHeight: widget.hourHeight,
-                      timeLineBuilder: widget.timeLineBuilder,
-                      timeLineOffset: widget.timeLineOffset,
-                      timeLineWidth: widget.timeLineWidth,
-                      showHalfHours: widget.showHalfHours,
-                      startHour: widget.startHour,
-                      endHour: widget.endHour,
-                      showQuarterHours: widget.showQuarterHours,
-                      key: ValueKey(widget.heightPerMinute),
-                      liveTimeIndicatorSettings:
-                          widget.liveTimeIndicatorSettings,
-                      onTimestampTap: widget.onTimestampTap,
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          right: BorderSide(
+                            color: context.dayViewColors.hourLineColor,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: TimeLine(
+                        height: widget.height,
+                        hourHeight: widget.hourHeight,
+                        timeLineBuilder: widget.timeLineBuilder,
+                        timeLineOffset: widget.timeLineOffset,
+                        timeLineWidth: widget.timeLineWidth,
+                        showHalfHours: widget.showHalfHours,
+                        startHour: widget.startHour,
+                        endHour: widget.endHour,
+                        showQuarterHours: widget.showQuarterHours,
+                        key: ValueKey(widget.heightPerMinute),
+                        liveTimeIndicatorSettings:
+                            widget.liveTimeIndicatorSettings,
+                        onTimestampTap: widget.onTimestampTap,
+                      ),
                     ),
                     if (widget.showLiveLine &&
                         widget.liveTimeIndicatorSettings.height > 0)

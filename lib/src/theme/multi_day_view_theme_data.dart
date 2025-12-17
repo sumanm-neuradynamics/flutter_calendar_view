@@ -47,33 +47,33 @@ class MultiDayViewThemeData extends ThemeExtension<MultiDayViewThemeData> {
   MultiDayViewThemeData.light()
       : multiDayTileColor = LightAppColors.surfaceContainerHigh,
         multiDayTextColor = LightAppColors.onSurface,
-        hourLineColor = Colors.black,
-        halfHourLineColor = Colors.black,
-        quarterHourLineColor = Colors.black,
+        hourLineColor = const Color(0xFF808080),
+        halfHourLineColor = const Color(0xFF808080),
+        quarterHourLineColor = const Color(0xFF808080),
         liveIndicatorColor = LightAppColors.primary,
         pageBackgroundColor = LightAppColors.surfaceContainerLowest,
         headerIconColor = LightAppColors.onPrimary,
         headerTextColor = LightAppColors.onPrimary,
         headerBackgroundColor = LightAppColors.primary,
         timelineTextColor = LightAppColors.onSurface,
-        borderColor = Colors.black,
-        verticalLinesColor = Colors.black;
+        borderColor = const Color(0xFF808080),
+        verticalLinesColor = const Color(0xFF808080);
 
   /// Get pre-defined colors for dark theme
   MultiDayViewThemeData.dark()
       : multiDayTileColor = DarkAppColors.surfaceContainerHigh,
         multiDayTextColor = DarkAppColors.onSurface,
-        hourLineColor = Colors.black,
-        halfHourLineColor = Colors.black,
-        quarterHourLineColor = Colors.black,
+        hourLineColor = const Color(0xFF808080),
+        halfHourLineColor = const Color(0xFF808080),
+        quarterHourLineColor = const Color(0xFF808080),
         liveIndicatorColor = DarkAppColors.primary,
         pageBackgroundColor = DarkAppColors.surfaceContainerLowest,
         headerIconColor = DarkAppColors.onPrimary,
         headerTextColor = DarkAppColors.onPrimary,
         headerBackgroundColor = DarkAppColors.primary,
         timelineTextColor = DarkAppColors.onSurface,
-        borderColor = Colors.black,
-        verticalLinesColor = Colors.black;
+        borderColor = const Color(0xFF808080),
+        verticalLinesColor = const Color(0xFF808080);
 
   @override
   ThemeExtension<MultiDayViewThemeData> copyWith({
