@@ -250,13 +250,15 @@ class _InternalDayViewPageState<T extends Object?>
                               widget.timeLineWidth -
                               widget.hourIndicatorSettings.offset -
                               widget.verticalLineOffset;
-                          
+
                           return PauseEventBackground<T>(
                             height: widget.height,
                             width: eventWidth,
                             allEvents: allEvents,
                             heightPerMinute: widget.heightPerMinute,
                             date: widget.date,
+                            columnIndex: 0, // Single column in DayView
+                            xStart: 0.0,
                             startHour: widget.startHour,
                             endHour: widget.endHour,
                           );
@@ -334,12 +336,13 @@ class _InternalDayViewPageState<T extends Object?>
                             includeFullDayEvents: false,
                           );
                           // Filter out pause events from normal event rendering
-                          final normalEvents = allEvents.where((e) => !e.isPause).toList();
+                          final normalEvents =
+                              allEvents.where((e) => !e.isPause).toList();
                           final eventWidth = widget.width -
                               widget.timeLineWidth -
                               widget.hourIndicatorSettings.offset -
                               widget.verticalLineOffset;
-                          
+
                           return EventGenerator<T>(
                             height: widget.height,
                             date: widget.date,

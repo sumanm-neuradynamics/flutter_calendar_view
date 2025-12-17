@@ -28,7 +28,14 @@ class PauseEventBackground<T extends Object?> extends StatelessWidget {
   final double heightPerMinute;
 
   /// Defines date for which events will be displayed.
+  /// This should match the column date exactly (same as header displays).
   final DateTime date;
+
+  /// Column index (0-based) for debug logging
+  final int? columnIndex;
+
+  /// X position start for this column (for debug logging)
+  final double? xStart;
 
   /// First hour displayed in the layout
   final int startHour;
@@ -50,6 +57,8 @@ class PauseEventBackground<T extends Object?> extends StatelessWidget {
     required this.startHour,
     this.endHour = 24,
     this.pauseBackgroundColor = const Color(0xFFE0E0E0),
+    this.columnIndex,
+    this.xStart,
   }) : super(key: key);
 
   @override
@@ -64,12 +73,16 @@ class PauseEventBackground<T extends Object?> extends StatelessWidget {
     // Use date as key to ensure widget identity changes when date changes
     // This prevents stale overlays from previous weeks/days
     return CustomPaint(
-      key: ValueKey('pause_${date.year}_${date.month}_${date.day}'),
+      key: ValueKey(
+          'pause_${date.year}_${date.month}_${date.day}_${columnIndex ?? '?'}'),
       size: Size(width, height),
       painter: _PauseEventPainter<T>(
         pauseEvents: pauseEvents,
         heightPerMinute: heightPerMinute,
         date: date,
+        columnIndex: columnIndex,
+        xStart: xStart,
+        width: width,
         startHour: startHour,
         endHour: endHour,
         pauseBackgroundColor: pauseBackgroundColor,
@@ -82,6 +95,9 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
   final List<CalendarEventData<T>> pauseEvents;
   final double heightPerMinute;
   final DateTime date;
+  final int? columnIndex;
+  final double? xStart;
+  final double width;
   final int startHour;
   final int endHour;
   final Color pauseBackgroundColor;
@@ -90,9 +106,12 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
     required this.pauseEvents,
     required this.heightPerMinute,
     required this.date,
+    required this.width,
     required this.startHour,
     required this.endHour,
     required this.pauseBackgroundColor,
+    this.columnIndex,
+    this.xStart,
   });
 
   /// Converts DateTime time to minutes from midnight (0-1440)
@@ -107,12 +126,22 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     // Normalize the view column date to midnight for strict comparison
+    // This should match exactly what the header displays for this column
     final columnDate = date.withoutTime;
     final columnDateStr =
         '${columnDate.year}-${columnDate.month.toString().padLeft(2, '0')}-${columnDate.day.toString().padLeft(2, '0')}';
 
+    // Column debug info
+    final colIdx = columnIndex ?? -1;
+    final xStartPos = xStart ?? 0.0;
+    final xEndPos = xStartPos + width;
+
+    debugPrint('[PausePainter] ===== COLUMN DEBUG =====');
+    debugPrint('[PausePainter] columnIndex: $colIdx');
+    debugPrint('[PausePainter] columnDate: $columnDateStr');
     debugPrint(
-        '[PausePainter] ===== Painting for column date: $columnDateStr =====');
+        '[PausePainter] xStart: ${xStartPos.toStringAsFixed(1)}, xEnd: ${xEndPos.toStringAsFixed(1)}, width: ${width.toStringAsFixed(1)}');
+    debugPrint('[PausePainter] ===== Painting pause events =====');
 
     for (final event in pauseEvents) {
       if (event.startTime == null || event.endTime == null) {
@@ -134,6 +163,8 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
       if (!datesMatch) {
         debugPrint(
             '[PausePainter] SKIP: Event date ($eventDateStr) != column date ($columnDateStr)');
+        debugPrint(
+            '[PausePainter] ⚠️ WARNING: Date mismatch detected - this should not happen if events are correctly filtered per day');
         continue; // Event doesn't belong to this day column, skip immediately
       }
 
@@ -185,11 +216,17 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
       final rectHeight = bottom - top;
 
       if (rectHeight > 0) {
-        // Draw the background rectangle
+        // Draw the background rectangle - full width of column
         final rect = Rect.fromLTWH(0, top, size.width, rectHeight);
         canvas.drawRect(rect, paint);
+        debugPrint('[PausePainter] ✓ PAINTED:');
+        debugPrint('  eventDate: $eventDateStr');
         debugPrint(
-            '[PausePainter] ✓ PAINTED: rect(top=${top.toStringAsFixed(1)}, bottom=${bottom.toStringAsFixed(1)}, height=${rectHeight.toStringAsFixed(1)})');
+            '  minutesFrom: $minutesFrom ($fromStr), minutesTo: $minutesTo ($toStr)');
+        debugPrint(
+            '  xStart: ${xStartPos.toStringAsFixed(1)}, xEnd: ${xEndPos.toStringAsFixed(1)}, width: ${width.toStringAsFixed(1)}');
+        debugPrint(
+            '  yTop: ${top.toStringAsFixed(1)}, yBottom: ${bottom.toStringAsFixed(1)}, height: ${rectHeight.toStringAsFixed(1)}');
       } else {
         debugPrint(
             '[PausePainter] SKIP: rectHeight <= 0 (top=$top, bottom=$bottom)');
@@ -197,7 +234,7 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
     }
 
     debugPrint(
-        '[PausePainter] ===== Finished painting for column date: $columnDateStr =====');
+        '[PausePainter] ===== Finished painting for column $colIdx (date: $columnDateStr) =====');
   }
 
   @override

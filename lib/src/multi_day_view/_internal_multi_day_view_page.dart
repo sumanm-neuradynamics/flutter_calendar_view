@@ -381,12 +381,16 @@ class _InternalMultiDayViewPageState<T extends Object?>
                                   filteredDates[index],
                                   includeFullDayEvents: false,
                                 );
+                                // Calculate x position for this column (for debug logging)
+                                final xStart = index * widget.weekTitleWidth;
                                 return PauseEventBackground<T>(
                                   height: widget.height,
                                   width: widget.weekTitleWidth,
                                   allEvents: allEvents,
                                   heightPerMinute: widget.heightPerMinute,
                                   date: filteredDates[index],
+                                  columnIndex: index,
+                                  xStart: xStart,
                                   startHour: widget.startHour,
                                   endHour: widget.endHour,
                                 );
