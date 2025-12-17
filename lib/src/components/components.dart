@@ -10,5 +10,6 @@ export 'headers/day_page_header.dart';
 export 'headers/month_page_header.dart';
 export 'headers/week_page_header.dart';
 export 'month_view_components.dart';
+export 'pause_event_background.dart';
 export 'safe_area_wrapper.dart';
 export 'week_view_components.dart';

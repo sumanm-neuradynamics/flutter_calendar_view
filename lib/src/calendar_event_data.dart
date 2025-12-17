@@ -47,6 +47,10 @@ class CalendarEventData<T extends Object?> {
   /// Define reoccurrence settings
   final RecurrenceSettings? recurrenceSettings;
 
+  /// Flag to mark this event as a pause event.
+  /// Pause events are rendered as background overlays instead of regular event tiles.
+  final bool isPause;
+
   /// {@macro calendar_event_data_doc}
   CalendarEventData({
     required this.title,
@@ -60,6 +64,7 @@ class CalendarEventData<T extends Object?> {
     this.descriptionStyle,
     this.recurrenceSettings,
     DateTime? endDate,
+    this.isPause = false,
   })  : _endDate = endDate?.withoutTime,
         date = date.withoutTime;
 
@@ -146,6 +151,7 @@ class CalendarEventData<T extends Object?> {
     DateTime? endDate,
     DateTime? date,
     RecurrenceSettings? recurrenceSettings,
+    bool? isPause,
   }) {
     return CalendarEventData(
       title: title ?? this.title,
@@ -159,6 +165,7 @@ class CalendarEventData<T extends Object?> {
       event: event ?? this.event,
       titleStyle: titleStyle ?? this.titleStyle,
       recurrenceSettings: recurrenceSettings ?? this.recurrenceSettings,
+      isPause: isPause ?? this.isPause,
     );
   }
 
@@ -184,7 +191,8 @@ class CalendarEventData<T extends Object?> {
         color == other.color &&
         titleStyle == other.titleStyle &&
         descriptionStyle == other.descriptionStyle &&
-        description == other.description;
+        description == other.description &&
+        isPause == other.isPause;
   }
 
   @override

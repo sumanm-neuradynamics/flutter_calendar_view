@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../components/_internal_components.dart';
+import '../components/components.dart';
 import '../components/event_scroll_notifier.dart';
 import '../enumerations.dart';
 import '../event_arrangers/event_arrangers.dart';
@@ -298,26 +299,50 @@ class _InternalDayViewPageState<T extends Object?>
                     ),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: EventGenerator<T>(
-                        height: widget.height,
-                        date: widget.date,
-                        onTileLongTap: widget.onTileLongTap,
-                        onTileDoubleTap: widget.onTileDoubleTap,
-                        onTileTap: widget.onTileTap,
-                        eventArranger: widget.eventArranger,
-                        events: widget.controller.getEventsOnDay(
-                          widget.date,
-                          includeFullDayEvents: false,
-                        ),
-                        heightPerMinute: widget.heightPerMinute,
-                        eventTileBuilder: widget.eventTileBuilder,
-                        scrollNotifier: widget.scrollNotifier,
-                        startHour: widget.startHour,
-                        endHour: widget.endHour,
-                        width: widget.width -
-                            widget.timeLineWidth -
-                            widget.hourIndicatorSettings.offset -
-                            widget.verticalLineOffset,
+                      child: Builder(
+                        builder: (context) {
+                          final allEvents = widget.controller.getEventsOnDay(
+                            widget.date,
+                            includeFullDayEvents: false,
+                          );
+                          // Filter out pause events from normal event rendering
+                          final normalEvents = allEvents.where((e) => !e.isPause).toList();
+                          final eventWidth = widget.width -
+                              widget.timeLineWidth -
+                              widget.hourIndicatorSettings.offset -
+                              widget.verticalLineOffset;
+                          
+                          return Stack(
+                            children: [
+                              // Pause event background layer (rendered first, behind everything)
+                              PauseEventBackground<T>(
+                                height: widget.height,
+                                width: eventWidth,
+                                allEvents: allEvents,
+                                heightPerMinute: widget.heightPerMinute,
+                                date: widget.date,
+                                startHour: widget.startHour,
+                                endHour: widget.endHour,
+                              ),
+                              // Normal events (rendered on top)
+                              EventGenerator<T>(
+                                height: widget.height,
+                                date: widget.date,
+                                onTileLongTap: widget.onTileLongTap,
+                                onTileDoubleTap: widget.onTileDoubleTap,
+                                onTileTap: widget.onTileTap,
+                                eventArranger: widget.eventArranger,
+                                events: normalEvents,
+                                heightPerMinute: widget.heightPerMinute,
+                                eventTileBuilder: widget.eventTileBuilder,
+                                scrollNotifier: widget.scrollNotifier,
+                                startHour: widget.startHour,
+                                endHour: widget.endHour,
+                                width: eventWidth,
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                     TimeLine(
