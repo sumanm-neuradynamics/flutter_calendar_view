@@ -106,42 +106,39 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
         continue;
       }
 
-      // CRITICAL: Check if event actually occurs on this date using actual startTime date
-      // The event.date is the start date, but we need to verify this column date
-      // is within the event's actual date range
+      // Trust that getEventsOnDay already filtered events correctly for this column date
+      // All events passed here are guaranteed to occur on this date
+      // We just need to calculate the correct time range for this specific day
+
       final eventStartDate = event.date.withoutTime;
       final eventEndDate = event.endDate.withoutTime;
 
-      // Only render if this column date is within the event's date range
-      if (columnDate.isBefore(eventStartDate) ||
-          columnDate.isAfter(eventEndDate)) {
-        continue; // Event doesn't occur on this date
-      }
-
-      // For multi-day events, calculate the time range for the current date
+      // Calculate the time range for this specific column date
       int startMinutes;
       int endMinutes;
 
       if (event.isRangingEvent) {
-        // Event spans multiple days
+        // Event spans multiple days - calculate time range based on which day this is
         if (columnDate.compareWithoutTime(eventStartDate)) {
-          // First day: start from event.startTime, end at midnight (24:00)
+          // First day: start from event.startTime, end at end of day (24:00)
           startMinutes = event.startTime!.hour * 60 + event.startTime!.minute;
           endMinutes = 24 * 60; // End of day
         } else if (columnDate.compareWithoutTime(eventEndDate)) {
-          // Last day: start from midnight (00:00), end at event.endTime
+          // Last day: start from beginning of day (00:00), end at event.endTime
           startMinutes = 0;
           endMinutes = event.endTime!.hour * 60 + event.endTime!.minute;
         } else {
-          // Middle day(s): full day coverage
+          // Middle day(s): full day coverage from 00:00 to 24:00
           startMinutes = 0;
           endMinutes = 24 * 60;
         }
       } else {
-        // Single day event - only render if column date matches event date exactly
+        // Single day event - only render if column date matches event's actual start date exactly
+        // This ensures pause sessions start from their actual startTime date, not from first visible day
         if (!columnDate.compareWithoutTime(eventStartDate)) {
-          continue; // Not on this date
+          continue; // Not on this date - skip to prevent rendering on wrong days
         }
+        // Use the event's actual startTime and endTime
         startMinutes = event.startTime!.hour * 60 + event.startTime!.minute;
         endMinutes = event.endTime!.hour * 60 + event.endTime!.minute;
       }
@@ -157,7 +154,6 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
       }
 
       // Calculate top and bottom positions - ensure we respect hour boundaries
-      // Round to nearest hour boundary to avoid covering borders
       final top = math.max(0.0, startMinutesFromStartHour * heightPerMinute);
       final bottom = math.min(
         size.height,
