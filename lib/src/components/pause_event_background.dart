@@ -35,7 +35,7 @@ class PauseEventBackground<T extends Object?> extends StatelessWidget {
   /// This field will be used to set end hour for day and week view
   final int endHour;
 
-  /// Background color for pause events. Default is light gray.
+  /// Background color for pause events. Default is light blue-gray.
   final Color pauseBackgroundColor;
 
   /// Widget that renders pause events as background overlays.
@@ -48,7 +48,7 @@ class PauseEventBackground<T extends Object?> extends StatelessWidget {
     required this.date,
     required this.startHour,
     this.endHour = 24,
-    this.pauseBackgroundColor = const Color(0xFFE0E0E0),
+    this.pauseBackgroundColor = const Color.fromARGB(77, 157, 178, 206),
   }) : super(key: key);
 
   @override
