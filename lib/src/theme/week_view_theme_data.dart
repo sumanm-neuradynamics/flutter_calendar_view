@@ -49,33 +49,33 @@ class WeekViewThemeData extends ThemeExtension<WeekViewThemeData> {
   WeekViewThemeData.light()
       : weekDayTileColor = LightAppColors.surfaceContainerHigh,
         weekDayTextColor = LightAppColors.onSurface,
-        hourLineColor = LightAppColors.surfaceContainerHighest,
-        halfHourLineColor = LightAppColors.surfaceContainerHighest,
-        quarterHourLineColor = LightAppColors.surfaceContainerHighest,
+        hourLineColor = Colors.black,
+        halfHourLineColor = Colors.black,
+        quarterHourLineColor = Colors.black,
         liveIndicatorColor = LightAppColors.primary,
         pageBackgroundColor = LightAppColors.surfaceContainerLowest,
         headerIconColor = LightAppColors.onPrimary,
         headerTextColor = LightAppColors.onPrimary,
         headerBackgroundColor = LightAppColors.primary,
         timelineTextColor = LightAppColors.onSurface,
-        borderColor = LightAppColors.surfaceContainerHighest,
-        verticalLinesColor = LightAppColors.surfaceContainerHighest;
+        borderColor = Colors.black,
+        verticalLinesColor = Colors.black;
 
   /// Get pre-defined colors for dark theme
   WeekViewThemeData.dark()
       : weekDayTileColor = DarkAppColors.surfaceContainerHigh,
         weekDayTextColor = DarkAppColors.onSurface,
-        hourLineColor = DarkAppColors.surfaceContainerHighest,
-        halfHourLineColor = DarkAppColors.surfaceContainerHighest,
-        quarterHourLineColor = DarkAppColors.surfaceContainerHighest,
+        hourLineColor = Colors.black,
+        halfHourLineColor = Colors.black,
+        quarterHourLineColor = Colors.black,
         liveIndicatorColor = DarkAppColors.primary,
         pageBackgroundColor = DarkAppColors.surfaceContainerLowest,
         headerIconColor = DarkAppColors.onPrimary,
         headerTextColor = DarkAppColors.onPrimary,
         headerBackgroundColor = DarkAppColors.primary,
         timelineTextColor = DarkAppColors.onSurface,
-        borderColor = DarkAppColors.surfaceContainerHighest,
-        verticalLinesColor = DarkAppColors.surfaceContainerHighest;
+        borderColor = Colors.black,
+        verticalLinesColor = Colors.black;
 
   @override
   ThemeExtension<WeekViewThemeData> copyWith({

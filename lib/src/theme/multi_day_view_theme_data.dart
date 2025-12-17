@@ -47,33 +47,33 @@ class MultiDayViewThemeData extends ThemeExtension<MultiDayViewThemeData> {
   MultiDayViewThemeData.light()
       : multiDayTileColor = LightAppColors.surfaceContainerHigh,
         multiDayTextColor = LightAppColors.onSurface,
-        hourLineColor = LightAppColors.surfaceContainerHighest,
-        halfHourLineColor = LightAppColors.surfaceContainerHighest,
-        quarterHourLineColor = LightAppColors.surfaceContainerHighest,
+        hourLineColor = Colors.black,
+        halfHourLineColor = Colors.black,
+        quarterHourLineColor = Colors.black,
         liveIndicatorColor = LightAppColors.primary,
         pageBackgroundColor = LightAppColors.surfaceContainerLowest,
         headerIconColor = LightAppColors.onPrimary,
         headerTextColor = LightAppColors.onPrimary,
         headerBackgroundColor = LightAppColors.primary,
         timelineTextColor = LightAppColors.onSurface,
-        borderColor = LightAppColors.surfaceContainerHighest,
-        verticalLinesColor = LightAppColors.surfaceContainerHighest;
+        borderColor = Colors.black,
+        verticalLinesColor = Colors.black;
 
   /// Get pre-defined colors for dark theme
   MultiDayViewThemeData.dark()
       : multiDayTileColor = DarkAppColors.surfaceContainerHigh,
         multiDayTextColor = DarkAppColors.onSurface,
-        hourLineColor = DarkAppColors.surfaceContainerHighest,
-        halfHourLineColor = DarkAppColors.surfaceContainerHighest,
-        quarterHourLineColor = DarkAppColors.surfaceContainerHighest,
+        hourLineColor = Colors.black,
+        halfHourLineColor = Colors.black,
+        quarterHourLineColor = Colors.black,
         liveIndicatorColor = DarkAppColors.primary,
         pageBackgroundColor = DarkAppColors.surfaceContainerLowest,
         headerIconColor = DarkAppColors.onPrimary,
         headerTextColor = DarkAppColors.onPrimary,
         headerBackgroundColor = DarkAppColors.primary,
         timelineTextColor = DarkAppColors.onSurface,
-        borderColor = DarkAppColors.surfaceContainerHighest,
-        verticalLinesColor = DarkAppColors.surfaceContainerHighest;
+        borderColor = Colors.black,
+        verticalLinesColor = Colors.black;
 
   @override
   ThemeExtension<MultiDayViewThemeData> copyWith({
