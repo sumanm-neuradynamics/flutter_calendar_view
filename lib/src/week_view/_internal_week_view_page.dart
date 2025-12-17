@@ -373,6 +373,37 @@ class _InternalWeekViewPageState<T extends Object?>
                 width: widget.width,
                 child: Stack(
                   children: [
+                    // Layer 1: Pause event backgrounds (painted first, at the bottom)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: SizedBox(
+                        width: widget.weekTitleWidth * filteredDates.length,
+                        height: widget.height,
+                        child: Row(
+                          children: [
+                            ...List.generate(
+                              filteredDates.length,
+                              (index) {
+                                final allEvents = widget.controller.getEventsOnDay(
+                                  filteredDates[index],
+                                  includeFullDayEvents: false,
+                                );
+                                return PauseEventBackground<T>(
+                                  height: widget.height,
+                                  width: widget.weekTitleWidth,
+                                  allEvents: allEvents,
+                                  heightPerMinute: widget.heightPerMinute,
+                                  date: filteredDates[index],
+                                  startHour: widget.startHour,
+                                  endHour: widget.endHour,
+                                );
+                              },
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Layer 2: Grid lines (hour lines, half hours, quarter hours)
                     CustomPaint(
                       size: Size(widget.width, widget.height),
                       painter: widget.hourLinePainter(
@@ -426,6 +457,7 @@ class _InternalWeekViewPageState<T extends Object?>
                               .quarterHourIndicatorSettings.dashSpaceWidth,
                         ),
                       ),
+                    // Layer 3: Day column separators and normal events
                     Align(
                       alignment: Alignment.centerRight,
                       child: SizedBox(
@@ -473,36 +505,22 @@ class _InternalWeekViewPageState<T extends Object?>
                                         // Filter out pause events from normal event rendering
                                         final normalEvents = allEvents.where((e) => !e.isPause).toList();
                                         
-                                        return Stack(
-                                          children: [
-                                            // Pause event background layer (rendered first, behind everything)
-                                            PauseEventBackground<T>(
-                                              height: widget.height,
-                                              width: widget.weekTitleWidth,
-                                              allEvents: allEvents,
-                                              heightPerMinute: widget.heightPerMinute,
-                                              date: filteredDates[index],
-                                              startHour: widget.startHour,
-                                              endHour: widget.endHour,
-                                            ),
-                                            // Normal events (rendered on top)
-                                            EventGenerator<T>(
-                                              height: widget.height,
-                                              date: filteredDates[index],
-                                              onTileTap: widget.onTileTap,
-                                              onTileLongTap: widget.onTileLongTap,
-                                              onTileDoubleTap: widget.onTileDoubleTap,
-                                              width: widget.weekTitleWidth,
-                                              eventArranger: widget.eventArranger,
-                                              eventTileBuilder: widget.eventTileBuilder,
-                                              scrollNotifier:
-                                                  widget.scrollConfiguration,
-                                              startHour: widget.startHour,
-                                              events: normalEvents,
-                                              heightPerMinute: widget.heightPerMinute,
-                                              endHour: widget.endHour,
-                                            ),
-                                          ],
+                                        // Normal events (rendered on top of grid lines)
+                                        return EventGenerator<T>(
+                                          height: widget.height,
+                                          date: filteredDates[index],
+                                          onTileTap: widget.onTileTap,
+                                          onTileLongTap: widget.onTileLongTap,
+                                          onTileDoubleTap: widget.onTileDoubleTap,
+                                          width: widget.weekTitleWidth,
+                                          eventArranger: widget.eventArranger,
+                                          eventTileBuilder: widget.eventTileBuilder,
+                                          scrollNotifier:
+                                              widget.scrollConfiguration,
+                                          startHour: widget.startHour,
+                                          events: normalEvents,
+                                          heightPerMinute: widget.heightPerMinute,
+                                          endHour: widget.endHour,
                                         );
                                       },
                                     ),
