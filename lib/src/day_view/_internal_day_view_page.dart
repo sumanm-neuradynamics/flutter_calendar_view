@@ -237,6 +237,7 @@ class _InternalDayViewPageState<T extends Object?>
                 width: widget.width,
                 child: Stack(
                   children: [
+                    // Layer 1: Hour indicator borders/grid lines (BOTTOM LAYER - rendered first)
                     CustomPaint(
                       size: Size(widget.width, widget.height),
                       painter: widget.hourLinePainter(
@@ -297,6 +298,33 @@ class _InternalDayViewPageState<T extends Object?>
                       date: widget.date,
                       minuteSlotSize: widget.minuteSlotSize,
                     ),
+                    // Layer 2: Pause event background overlay (MIDDLE LAYER - rendered after hour indicators)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Builder(
+                        builder: (context) {
+                          final allEvents = widget.controller.getEventsOnDay(
+                            widget.date,
+                            includeFullDayEvents: false,
+                          );
+                          final eventWidth = widget.width -
+                              widget.timeLineWidth -
+                              widget.hourIndicatorSettings.offset -
+                              widget.verticalLineOffset;
+
+                          return PauseEventBackground<T>(
+                            height: widget.height,
+                            width: eventWidth,
+                            allEvents: allEvents,
+                            heightPerMinute: widget.heightPerMinute,
+                            date: widget.date,
+                            startHour: widget.startHour,
+                            endHour: widget.endHour,
+                          );
+                        },
+                      ),
+                    ),
+                    // Layer 3: Normal events (TOP LAYER - rendered last)
                     Align(
                       alignment: Alignment.centerRight,
                       child: Builder(
@@ -313,35 +341,20 @@ class _InternalDayViewPageState<T extends Object?>
                               widget.hourIndicatorSettings.offset -
                               widget.verticalLineOffset;
 
-                          return Stack(
-                            children: [
-                              // Pause event background layer (rendered first, behind everything)
-                              PauseEventBackground<T>(
-                                height: widget.height,
-                                width: eventWidth,
-                                allEvents: allEvents,
-                                heightPerMinute: widget.heightPerMinute,
-                                date: widget.date,
-                                startHour: widget.startHour,
-                                endHour: widget.endHour,
-                              ),
-                              // Normal events (rendered on top)
-                              EventGenerator<T>(
-                                height: widget.height,
-                                date: widget.date,
-                                onTileLongTap: widget.onTileLongTap,
-                                onTileDoubleTap: widget.onTileDoubleTap,
-                                onTileTap: widget.onTileTap,
-                                eventArranger: widget.eventArranger,
-                                events: normalEvents,
-                                heightPerMinute: widget.heightPerMinute,
-                                eventTileBuilder: widget.eventTileBuilder,
-                                scrollNotifier: widget.scrollNotifier,
-                                startHour: widget.startHour,
-                                endHour: widget.endHour,
-                                width: eventWidth,
-                              ),
-                            ],
+                          return EventGenerator<T>(
+                            height: widget.height,
+                            date: widget.date,
+                            onTileLongTap: widget.onTileLongTap,
+                            onTileDoubleTap: widget.onTileDoubleTap,
+                            onTileTap: widget.onTileTap,
+                            eventArranger: widget.eventArranger,
+                            events: normalEvents,
+                            heightPerMinute: widget.heightPerMinute,
+                            eventTileBuilder: widget.eventTileBuilder,
+                            scrollNotifier: widget.scrollNotifier,
+                            startHour: widget.startHour,
+                            endHour: widget.endHour,
+                            width: eventWidth,
                           );
                         },
                       ),
