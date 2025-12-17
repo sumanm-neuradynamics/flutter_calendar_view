@@ -373,6 +373,34 @@ class _InternalWeekViewPageState<T extends Object?>
                 width: widget.width,
                 child: Stack(
                   children: [
+                    // Layer 1: Pause event backgrounds (bottom layer - fills within hour boxes)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: SizedBox(
+                        width: widget.weekTitleWidth * filteredDates.length,
+                        height: widget.height,
+                        child: Row(
+                          children: [
+                            ...List.generate(
+                              filteredDates.length,
+                              (index) => PauseEventBackground<T>(
+                                height: widget.height,
+                                width: widget.weekTitleWidth,
+                                allEvents: widget.controller.getEventsOnDay(
+                                  filteredDates[index],
+                                  includeFullDayEvents: false,
+                                ),
+                                heightPerMinute: widget.heightPerMinute,
+                                date: filteredDates[index],
+                                startHour: widget.startHour,
+                                endHour: widget.endHour,
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Layer 2: Hour borders/grid lines (middle layer - always visible on top of pause backgrounds)
                     CustomPaint(
                       size: Size(widget.width, widget.height),
                       painter: widget.hourLinePainter(
@@ -476,42 +504,25 @@ class _InternalWeekViewPageState<T extends Object?>
                                             .where((e) => !e.isPause)
                                             .toList();
 
-                                        return Stack(
-                                          children: [
-                                            // Pause event background layer (rendered first, behind everything)
-                                            PauseEventBackground<T>(
-                                              height: widget.height,
-                                              width: widget.weekTitleWidth,
-                                              allEvents: allEvents,
-                                              heightPerMinute:
-                                                  widget.heightPerMinute,
-                                              date: filteredDates[index],
-                                              startHour: widget.startHour,
-                                              endHour: widget.endHour,
-                                            ),
-                                            // Normal events (rendered on top)
-                                            EventGenerator<T>(
-                                              height: widget.height,
-                                              date: filteredDates[index],
-                                              onTileTap: widget.onTileTap,
-                                              onTileLongTap:
-                                                  widget.onTileLongTap,
-                                              onTileDoubleTap:
-                                                  widget.onTileDoubleTap,
-                                              width: widget.weekTitleWidth,
-                                              eventArranger:
-                                                  widget.eventArranger,
-                                              eventTileBuilder:
-                                                  widget.eventTileBuilder,
-                                              scrollNotifier:
-                                                  widget.scrollConfiguration,
-                                              startHour: widget.startHour,
-                                              events: normalEvents,
-                                              heightPerMinute:
-                                                  widget.heightPerMinute,
-                                              endHour: widget.endHour,
-                                            ),
-                                          ],
+                                        // Normal events (rendered on top of pause backgrounds and hour borders)
+                                        return EventGenerator<T>(
+                                          height: widget.height,
+                                          date: filteredDates[index],
+                                          onTileTap: widget.onTileTap,
+                                          onTileLongTap: widget.onTileLongTap,
+                                          onTileDoubleTap:
+                                              widget.onTileDoubleTap,
+                                          width: widget.weekTitleWidth,
+                                          eventArranger: widget.eventArranger,
+                                          eventTileBuilder:
+                                              widget.eventTileBuilder,
+                                          scrollNotifier:
+                                              widget.scrollConfiguration,
+                                          startHour: widget.startHour,
+                                          events: normalEvents,
+                                          heightPerMinute:
+                                              widget.heightPerMinute,
+                                          endHour: widget.endHour,
                                         );
                                       },
                                     ),

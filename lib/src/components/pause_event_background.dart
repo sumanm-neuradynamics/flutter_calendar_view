@@ -7,6 +7,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../calendar_event_data.dart';
+import '../extensions.dart';
 
 /// Widget that renders pause events as background overlays.
 ///
@@ -97,9 +98,24 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
       ..color = pauseBackgroundColor
       ..style = PaintingStyle.fill;
 
+    // Normalize the column date to midnight for comparison
+    final columnDate = date.withoutTime;
+
     for (final event in pauseEvents) {
       if (event.startTime == null || event.endTime == null) {
         continue;
+      }
+
+      // CRITICAL: Check if event actually occurs on this date using actual startTime date
+      // The event.date is the start date, but we need to verify this column date
+      // is within the event's actual date range
+      final eventStartDate = event.date.withoutTime;
+      final eventEndDate = event.endDate.withoutTime;
+
+      // Only render if this column date is within the event's date range
+      if (columnDate.isBefore(eventStartDate) ||
+          columnDate.isAfter(eventEndDate)) {
+        continue; // Event doesn't occur on this date
       }
 
       // For multi-day events, calculate the time range for the current date
@@ -108,23 +124,24 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
 
       if (event.isRangingEvent) {
         // Event spans multiple days
-        if (date.isAtSameMomentAs(event.date)) {
+        if (columnDate.compareWithoutTime(eventStartDate)) {
           // First day: start from event.startTime, end at midnight (24:00)
           startMinutes = event.startTime!.hour * 60 + event.startTime!.minute;
           endMinutes = 24 * 60; // End of day
-        } else if (date.isAtSameMomentAs(event.endDate)) {
+        } else if (columnDate.compareWithoutTime(eventEndDate)) {
           // Last day: start from midnight (00:00), end at event.endTime
           startMinutes = 0;
           endMinutes = event.endTime!.hour * 60 + event.endTime!.minute;
-        } else if (date.isAfter(event.date) && date.isBefore(event.endDate)) {
+        } else {
           // Middle day(s): full day coverage
           startMinutes = 0;
           endMinutes = 24 * 60;
-        } else {
-          continue; // Not on this date
         }
       } else {
-        // Single day event
+        // Single day event - only render if column date matches event date exactly
+        if (!columnDate.compareWithoutTime(eventStartDate)) {
+          continue; // Not on this date
+        }
         startMinutes = event.startTime!.hour * 60 + event.startTime!.minute;
         endMinutes = event.endTime!.hour * 60 + event.endTime!.minute;
       }
@@ -139,7 +156,8 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
         continue;
       }
 
-      // Calculate top and bottom positions
+      // Calculate top and bottom positions - ensure we respect hour boundaries
+      // Round to nearest hour boundary to avoid covering borders
       final top = math.max(0.0, startMinutesFromStartHour * heightPerMinute);
       final bottom = math.min(
         size.height,
@@ -149,7 +167,8 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
       final rectHeight = bottom - top;
 
       if (rectHeight > 0) {
-        // Draw the background rectangle
+        // Draw the background rectangle - fill within hour boxes, not covering borders
+        // The hour borders will be painted on top of this
         final rect = Rect.fromLTWH(0, top, size.width, rectHeight);
         canvas.drawRect(rect, paint);
       }
