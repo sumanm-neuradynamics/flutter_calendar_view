@@ -5,7 +5,6 @@
 import 'package:flutter/material.dart';
 
 import '../components/_internal_components.dart';
-import '../components/components.dart';
 import '../components/event_scroll_notifier.dart';
 import '../components/week_view_components.dart';
 import '../enumerations.dart';
@@ -366,41 +365,6 @@ class _InternalMultiDayViewPageState<T extends Object?>
                 width: widget.width,
                 child: Stack(
                   children: [
-                    // Layer 1: Pause event backgrounds (painted first, at the bottom)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: SizedBox(
-                        width: widget.weekTitleWidth * filteredDates.length,
-                        height: widget.height,
-                        child: Row(
-                          children: [
-                            ...List.generate(
-                              filteredDates.length,
-                              (index) {
-                                final allEvents = widget.controller.getEventsOnDay(
-                                  filteredDates[index],
-                                  includeFullDayEvents: false,
-                                );
-                                // Calculate x position for this column (for debug logging)
-                                final xStart = index * widget.weekTitleWidth;
-                                return PauseEventBackground<T>(
-                                  height: widget.height,
-                                  width: widget.weekTitleWidth,
-                                  allEvents: allEvents,
-                                  heightPerMinute: widget.heightPerMinute,
-                                  date: filteredDates[index],
-                                  columnIndex: index,
-                                  xStart: xStart,
-                                  startHour: widget.startHour,
-                                  endHour: widget.endHour,
-                                );
-                              },
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                    // Layer 2: Grid lines (hour lines, half hours, quarter hours)
                     CustomPaint(
                       size: Size(widget.width, widget.height),
                       painter: widget.hourLinePainter(
@@ -454,7 +418,6 @@ class _InternalMultiDayViewPageState<T extends Object?>
                               .quarterHourIndicatorSettings.dashSpaceWidth,
                         ),
                       ),
-                    // Layer 3: Day column separators and normal events
                     Align(
                       alignment: Alignment.centerRight,
                       child: SizedBox(
@@ -488,33 +451,24 @@ class _InternalMultiDayViewPageState<T extends Object?>
                                       date: widget.dates[index],
                                       minuteSlotSize: widget.minuteSlotSize,
                                     ),
-                                    Builder(
-                                      builder: (context) {
-                                        final allEvents = widget.controller.getEventsOnDay(
-                                          filteredDates[index],
-                                          includeFullDayEvents: false,
-                                        );
-                                        // Filter out pause events from normal event rendering
-                                        final normalEvents = allEvents.where((e) => !e.isPause).toList();
-                                        
-                                        // Normal events (rendered on top of grid lines)
-                                        return EventGenerator<T>(
-                                          height: widget.height,
-                                          date: filteredDates[index],
-                                          onTileTap: widget.onTileTap,
-                                          onTileLongTap: widget.onTileLongTap,
-                                          onTileDoubleTap: widget.onTileDoubleTap,
-                                          width: widget.weekTitleWidth,
-                                          eventArranger: widget.eventArranger,
-                                          eventTileBuilder: widget.eventTileBuilder,
-                                          scrollNotifier:
-                                              widget.scrollConfiguration,
-                                          startHour: widget.startHour,
-                                          events: normalEvents,
-                                          heightPerMinute: widget.heightPerMinute,
-                                          endHour: widget.endHour,
-                                        );
-                                      },
+                                    EventGenerator<T>(
+                                      height: widget.height,
+                                      date: filteredDates[index],
+                                      onTileTap: widget.onTileTap,
+                                      onTileLongTap: widget.onTileLongTap,
+                                      onTileDoubleTap: widget.onTileDoubleTap,
+                                      width: widget.weekTitleWidth,
+                                      eventArranger: widget.eventArranger,
+                                      eventTileBuilder: widget.eventTileBuilder,
+                                      scrollNotifier:
+                                          widget.scrollConfiguration,
+                                      startHour: widget.startHour,
+                                      events: widget.controller.getEventsOnDay(
+                                        filteredDates[index],
+                                        includeFullDayEvents: false,
+                                      ),
+                                      heightPerMinute: widget.heightPerMinute,
+                                      endHour: widget.endHour,
                                     ),
                                     if (widget.showLiveLine &&
                                         widget.liveTimeIndicatorSettings

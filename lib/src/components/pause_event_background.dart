@@ -7,7 +7,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../calendar_event_data.dart';
-import '../extensions.dart';
 
 /// Widget that renders pause events as background overlays.
 ///
@@ -28,14 +27,7 @@ class PauseEventBackground<T extends Object?> extends StatelessWidget {
   final double heightPerMinute;
 
   /// Defines date for which events will be displayed.
-  /// This should match the column date exactly (same as header displays).
   final DateTime date;
-
-  /// Column index (0-based) for debug logging
-  final int? columnIndex;
-
-  /// X position start for this column (for debug logging)
-  final double? xStart;
 
   /// First hour displayed in the layout
   final int startHour;
@@ -57,32 +49,23 @@ class PauseEventBackground<T extends Object?> extends StatelessWidget {
     required this.startHour,
     this.endHour = 24,
     this.pauseBackgroundColor = const Color(0xFFE0E0E0),
-    this.columnIndex,
-    this.xStart,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Filter pause events - recompute every build, no caching
+    // Filter pause events
     final pauseEvents = allEvents.where((event) => event.isPause).toList();
 
     if (pauseEvents.isEmpty) {
       return SizedBox.shrink();
     }
 
-    // Use date as key to ensure widget identity changes when date changes
-    // This prevents stale overlays from previous weeks/days
     return CustomPaint(
-      key: ValueKey(
-          'pause_${date.year}_${date.month}_${date.day}_${columnIndex ?? '?'}'),
       size: Size(width, height),
       painter: _PauseEventPainter<T>(
         pauseEvents: pauseEvents,
         heightPerMinute: heightPerMinute,
         date: date,
-        columnIndex: columnIndex,
-        xStart: xStart,
-        width: width,
         startHour: startHour,
         endHour: endHour,
         pauseBackgroundColor: pauseBackgroundColor,
@@ -95,9 +78,6 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
   final List<CalendarEventData<T>> pauseEvents;
   final double heightPerMinute;
   final DateTime date;
-  final int? columnIndex;
-  final double? xStart;
-  final double width;
   final int startHour;
   final int endHour;
   final Color pauseBackgroundColor;
@@ -106,18 +86,10 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
     required this.pauseEvents,
     required this.heightPerMinute,
     required this.date,
-    required this.width,
     required this.startHour,
     required this.endHour,
     required this.pauseBackgroundColor,
-    this.columnIndex,
-    this.xStart,
   });
-
-  /// Converts DateTime time to minutes from midnight (0-1440)
-  int _toMinutes(DateTime time) {
-    return time.hour * 60 + time.minute;
-  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -125,152 +97,72 @@ class _PauseEventPainter<T extends Object?> extends CustomPainter {
       ..color = pauseBackgroundColor
       ..style = PaintingStyle.fill;
 
-    // Normalize the view column date to midnight for strict comparison
-    // This should match exactly what the header displays for this column
-    final columnDate = date.withoutTime;
-    final columnDateStr =
-        '${columnDate.year}-${columnDate.month.toString().padLeft(2, '0')}-${columnDate.day.toString().padLeft(2, '0')}';
-
-    // Column debug info
-    final colIdx = columnIndex ?? -1;
-    final xStartPos = xStart ?? 0.0;
-    final xEndPos = xStartPos + width;
-
-    debugPrint('[PausePainter] ===== COLUMN DEBUG =====');
-    debugPrint('[PausePainter] columnIndex: $colIdx');
-    debugPrint('[PausePainter] columnDate: $columnDateStr');
-    debugPrint(
-        '[PausePainter] xStart: ${xStartPos.toStringAsFixed(1)}, xEnd: ${xEndPos.toStringAsFixed(1)}, width: ${width.toStringAsFixed(1)}');
-    debugPrint('[PausePainter] ===== Painting pause events =====');
-
     for (final event in pauseEvents) {
       if (event.startTime == null || event.endTime == null) {
-        debugPrint(
-            '[PausePainter] SKIP: Event "${event.title}" missing startTime or endTime');
         continue;
       }
 
-      // Normalize event date to midnight for strict comparison
-      final eventDate = event.date.withoutTime;
-      final eventDateStr =
-          '${eventDate.year}-${eventDate.month.toString().padLeft(2, '0')}-${eventDate.day.toString().padLeft(2, '0')}';
+      // For multi-day events, calculate the time range for the current date
+      int startMinutes;
+      int endMinutes;
 
-      // STRICT DATE MATCH: Only paint if event.date exactly matches column date
-      final datesMatch = columnDate.year == eventDate.year &&
-          columnDate.month == eventDate.month &&
-          columnDate.day == eventDate.day;
-
-      if (!datesMatch) {
-        debugPrint(
-            '[PausePainter] SKIP: Event date ($eventDateStr) != column date ($columnDateStr)');
-        debugPrint(
-            '[PausePainter] ⚠️ WARNING: Date mismatch detected - this should not happen if events are correctly filtered per day');
-        continue; // Event doesn't belong to this day column, skip immediately
+      if (event.isRangingEvent) {
+        // Event spans multiple days
+        if (date.isAtSameMomentAs(event.date)) {
+          // First day: start from event.startTime, end at midnight (24:00)
+          startMinutes = event.startTime!.hour * 60 + event.startTime!.minute;
+          endMinutes = 24 * 60; // End of day
+        } else if (date.isAtSameMomentAs(event.endDate)) {
+          // Last day: start from midnight (00:00), end at event.endTime
+          startMinutes = 0;
+          endMinutes = event.endTime!.hour * 60 + event.endTime!.minute;
+        } else if (date.isAfter(event.date) && date.isBefore(event.endDate)) {
+          // Middle day(s): full day coverage
+          startMinutes = 0;
+          endMinutes = 24 * 60;
+        } else {
+          continue; // Not on this date
+        }
+      } else {
+        // Single day event
+        startMinutes = event.startTime!.hour * 60 + event.startTime!.minute;
+        endMinutes = event.endTime!.hour * 60 + event.endTime!.minute;
       }
 
-      // Convert times to minutes from midnight (0-1440)
-      int minutesFrom = _toMinutes(event.startTime!);
-      int minutesTo = _toMinutes(event.endTime!);
+      // Calculate top position (offset from startHour)
+      final startMinutesFromStartHour = startMinutes - (startHour * 60);
+      final endMinutesFromStartHour = endMinutes - (startHour * 60);
 
-      // Handle 23:59:59 case - normalize to 1440 (end of day)
-      if (event.endTime!.hour == 23 && event.endTime!.minute == 59) {
-        minutesTo = 1440;
-      }
-
-      // CLAMP: Ensure minutes are within valid range [0, 1440]
-      minutesFrom = math.max(0, math.min(1440, minutesFrom));
-      minutesTo = math.max(0, math.min(1440, minutesTo));
-
-      // VALIDATE: Skip if invalid range
-      if (minutesTo <= minutesFrom) {
-        debugPrint(
-            '[PausePainter] SKIP: Invalid time range (minutesTo=$minutesTo <= minutesFrom=$minutesFrom)');
-        continue;
-      }
-
-      // Log computed paint range
-      final fromStr =
-          '${minutesFrom ~/ 60}:${(minutesFrom % 60).toString().padLeft(2, '0')}';
-      final toStr =
-          '${minutesTo ~/ 60}:${(minutesTo % 60).toString().padLeft(2, '0')}';
-      debugPrint(
-          '[PausePainter] Event date: $eventDateStr, minutesFrom: $minutesFrom ($fromStr), minutesTo: $minutesTo ($toStr)');
-
-      // Calculate position relative to startHour
-      final startMinutesFromStartHour = minutesFrom - (startHour * 60);
-      final endMinutesFromStartHour = minutesTo - (startHour * 60);
-
-      // Check if event overlaps with visible time range
-      final visibleRangeMinutes = (endHour - startHour) * 60;
+      // Only paint if the event overlaps with the visible time range
       if (endMinutesFromStartHour <= 0 ||
-          startMinutesFromStartHour >= visibleRangeMinutes) {
-        debugPrint(
-            '[PausePainter] SKIP: Outside visible range (${startHour}:00-${endHour}:00, ${visibleRangeMinutes}min)');
+          startMinutesFromStartHour >= (endHour - startHour) * 60) {
         continue;
       }
 
-      // Calculate top and bottom positions, clamped to visible area
+      // Calculate top and bottom positions
       final top = math.max(0.0, startMinutesFromStartHour * heightPerMinute);
-      final bottom =
-          math.min(size.height, endMinutesFromStartHour * heightPerMinute);
+      final bottom = math.min(
+        size.height,
+        endMinutesFromStartHour * heightPerMinute,
+      );
+
       final rectHeight = bottom - top;
 
       if (rectHeight > 0) {
-        // Draw the background rectangle - full width of column
+        // Draw the background rectangle
         final rect = Rect.fromLTWH(0, top, size.width, rectHeight);
         canvas.drawRect(rect, paint);
-        debugPrint('[PausePainter] ✓ PAINTED:');
-        debugPrint('  eventDate: $eventDateStr');
-        debugPrint(
-            '  minutesFrom: $minutesFrom ($fromStr), minutesTo: $minutesTo ($toStr)');
-        debugPrint(
-            '  xStart: ${xStartPos.toStringAsFixed(1)}, xEnd: ${xEndPos.toStringAsFixed(1)}, width: ${width.toStringAsFixed(1)}');
-        debugPrint(
-            '  yTop: ${top.toStringAsFixed(1)}, yBottom: ${bottom.toStringAsFixed(1)}, height: ${rectHeight.toStringAsFixed(1)}');
-      } else {
-        debugPrint(
-            '[PausePainter] SKIP: rectHeight <= 0 (top=$top, bottom=$bottom)');
       }
     }
-
-    debugPrint(
-        '[PausePainter] ===== Finished painting for column $colIdx (date: $columnDateStr) =====');
   }
 
   @override
   bool shouldRepaint(_PauseEventPainter<T> oldDelegate) {
-    // Always repaint if any property changes to prevent stale overlays
-    final dateChanged = date.year != oldDelegate.date.year ||
-        date.month != oldDelegate.date.month ||
-        date.day != oldDelegate.date.day;
-
-    final shouldRepaint =
-        pauseEvents.length != oldDelegate.pauseEvents.length ||
-            heightPerMinute != oldDelegate.heightPerMinute ||
-            dateChanged ||
-            startHour != oldDelegate.startHour ||
-            endHour != oldDelegate.endHour ||
-            pauseBackgroundColor != oldDelegate.pauseBackgroundColor;
-
-    // Also check if event contents changed (compare first event's date/time if available)
-    if (!shouldRepaint &&
-        pauseEvents.isNotEmpty &&
-        oldDelegate.pauseEvents.isNotEmpty) {
-      final firstNew = pauseEvents.first;
-      final firstOld = oldDelegate.pauseEvents.first;
-      final newDate = firstNew.date.withoutTime;
-      final oldDate = firstOld.date.withoutTime;
-      if (newDate.year != oldDate.year ||
-          newDate.month != oldDate.month ||
-          newDate.day != oldDate.day ||
-          firstNew.startTime?.hour != firstOld.startTime?.hour ||
-          firstNew.startTime?.minute != firstOld.startTime?.minute ||
-          firstNew.endTime?.hour != firstOld.endTime?.hour ||
-          firstNew.endTime?.minute != firstOld.endTime?.minute) {
-        return true;
-      }
-    }
-
-    return shouldRepaint;
+    return pauseEvents != oldDelegate.pauseEvents ||
+        heightPerMinute != oldDelegate.heightPerMinute ||
+        date != oldDelegate.date ||
+        startHour != oldDelegate.startHour ||
+        endHour != oldDelegate.endHour ||
+        pauseBackgroundColor != oldDelegate.pauseBackgroundColor;
   }
 }
