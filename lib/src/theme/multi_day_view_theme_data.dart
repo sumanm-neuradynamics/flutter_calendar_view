@@ -47,33 +47,33 @@ class MultiDayViewThemeData extends ThemeExtension<MultiDayViewThemeData> {
   MultiDayViewThemeData.light()
       : multiDayTileColor = LightAppColors.surfaceContainerHigh,
         multiDayTextColor = LightAppColors.onSurface,
-        hourLineColor = const Color(0xFF808080),
-        halfHourLineColor = const Color(0xFF808080),
-        quarterHourLineColor = const Color(0xFF808080),
+        hourLineColor = const Color(0xFFD5DEE3),
+        halfHourLineColor = const Color(0xFFD5DEE3),
+        quarterHourLineColor = const Color(0xFFD5DEE3),
         liveIndicatorColor = LightAppColors.primary,
         pageBackgroundColor = LightAppColors.surfaceContainerLowest,
         headerIconColor = LightAppColors.onPrimary,
         headerTextColor = LightAppColors.onPrimary,
         headerBackgroundColor = LightAppColors.primary,
         timelineTextColor = LightAppColors.onSurface,
-        borderColor = const Color(0xFF808080),
-        verticalLinesColor = const Color(0xFF808080);
+        borderColor = const Color(0xFFD5DEE3),
+        verticalLinesColor = const Color(0xFFD5DEE3);
 
   /// Get pre-defined colors for dark theme
   MultiDayViewThemeData.dark()
       : multiDayTileColor = DarkAppColors.surfaceContainerHigh,
         multiDayTextColor = DarkAppColors.onSurface,
-        hourLineColor = const Color(0xFF808080),
-        halfHourLineColor = const Color(0xFF808080),
-        quarterHourLineColor = const Color(0xFF808080),
+        hourLineColor = const Color(0xFFD5DEE3),
+        halfHourLineColor = const Color(0xFFD5DEE3),
+        quarterHourLineColor = const Color(0xFFD5DEE3),
         liveIndicatorColor = DarkAppColors.primary,
         pageBackgroundColor = DarkAppColors.surfaceContainerLowest,
         headerIconColor = DarkAppColors.onPrimary,
         headerTextColor = DarkAppColors.onPrimary,
         headerBackgroundColor = DarkAppColors.primary,
         timelineTextColor = DarkAppColors.onSurface,
-        borderColor = const Color(0xFF808080),
-        verticalLinesColor = const Color(0xFF808080);
+        borderColor = const Color(0xFFD5DEE3),
+        verticalLinesColor = const Color(0xFFD5DEE3);
 
   @override
   ThemeExtension<MultiDayViewThemeData> copyWith({
